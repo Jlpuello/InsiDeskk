@@ -38,8 +38,22 @@ export const backupService = {
     try {
       await execAsync(`pg_dump "${env.databaseUrl}" -f "${file}"`);
       logger.info(`Backup creado: ${file}`);
+      backupService.pruneOldBackups();
     } catch (err) {
       logger.error(`Error creando backup: ${(err as Error).message}`);
+    }
+  },
+
+  // Solo toca archivos con el patrón backup-*.sql de este directorio.
+  pruneOldBackups(): void {
+    const cutoff = Date.now() - env.backupRetentionDays * 24 * 60 * 60 * 1000;
+    for (const name of fs.readdirSync(env.backupDir)) {
+      if (!/^backup-.*\.sql$/.test(name)) continue;
+      const full = path.join(env.backupDir, name);
+      if (fs.statSync(full).mtimeMs < cutoff) {
+        fs.rmSync(full);
+        logger.info(`Backup viejo eliminado: ${name}`);
+      }
     }
   },
 

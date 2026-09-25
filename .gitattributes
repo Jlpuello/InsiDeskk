@@ -1,0 +1,5 @@
+# Scripts y config que corren dentro de contenedores Linux: siempre LF. Con CRLF
+# (autocrlf de Windows) el shebang falla con "\r: not found" al montar el
+# proyecto como volumen.
+*.sh text eol=lf
+docker/* text eol=lf

@@ -82,6 +82,9 @@ export const env = {
   backupEnabled: (process.env.BACKUP_ENABLED ?? 'false') === 'true',
   backupCron: process.env.BACKUP_CRON ?? '0 3 * * *',
   backupDir: process.env.BACKUP_DIR ?? './backups',
+  // Días que se conservan los backup-*.sql; los más viejos se borran al terminar
+  // cada backup nuevo (sin esto el disco se llena de a un archivo por noche).
+  backupRetentionDays: Number(process.env.BACKUP_RETENTION_DAYS ?? 14),
 
   // Envío de actas de entrega por correo (ver features/activities/services/acta.service.ts).
   // Vacío en dev = el envío falla con un error claro en vez de fingir que mandó algo.

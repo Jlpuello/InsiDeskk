@@ -88,8 +88,33 @@ Edita `backend/.env`:
 ### 2. Levantar Postgres y Redis
 
 ```bash
-docker-compose up -d postgres redis
+docker compose up -d postgres redis   # requiere el .env de la raíz, ver "Despliegue con Docker / Portainer"
 ```
+
+## Despliegue con Docker / Portainer
+
+El stack (`docker-compose.yml`) son 3 contenedores: `postgres`, `redis` y `app`
+(**backend + frontend en un solo contenedor**: Node corre la API y nginx sirve el
+frontend y hace de proxy de `/api` y `/socket.io`, todo bajo el mismo origen).
+
+El código **no se copia a ninguna imagen**: la carpeta del proyecto se monta en
+`/app` (`PROJECT_DIR`) y `docker/entrypoint.sh` instala dependencias, compila y
+sirve al iniciar. Las dependencias y el build viven en volúmenes nombrados, y se
+recalculan solo si cambia el código (un reinicio sin cambios arranca en segundos).
+
+```bash
+cp .env.stack.example .env      # completar PROJECT_DIR (ruta absoluta), secretos, URL pública
+docker compose up -d --build    # la imagen es genérica (solo Node + nginx + pg_dump)
+```
+
+- **Actualizar**: `git pull` en el host + `docker compose restart app`.
+- **Portainer**: Stacks → Add stack → pegar `docker-compose.yml` (o apuntar al repo) y
+  cargar las variables de `.env.stack.example` en *Environment variables*. `PROJECT_DIR`
+  debe ser la ruta absoluta del proyecto en el servidor.
+- **Datos**: volúmenes `insidesk_postgres_data`, `insidesk_redis_data`, `insidesk_backend_uploads`,
+  `insidesk_backend_backups` (pg_dump diario, retención `BACKUP_RETENTION_DAYS`) y `insidesk_backend_logs`.
+- **Restaurar un backup**: `docker exec tickets_app sh /app/backend/scripts/restore-backup.sh /data/backups/backup-XXXX.sql <DATABASE_URL_destino>`.
+- **HTTPS**: poner un proxy con TLS delante (Traefik/Caddy/NPM) → `COOKIE_SECURE=true` y `TRUST_PROXY=2`.
 
 ### 3. Instalar dependencias y generar el cliente de Prisma
 

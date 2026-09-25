@@ -12,7 +12,20 @@ export const logger = winston.createLogger({
     new winston.transports.Console({
       format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
     }),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
+    // Rotación por tamaño: 10 MB × 5 archivos por transport (máx ~100 MB en
+    // disco). Sin esto los logs crecían sin límite en un servidor de vida larga.
+    new winston.transports.File({
+      filename: 'logs/error.log',
+      level: 'error',
+      maxsize: 10 * 1024 * 1024,
+      maxFiles: 5,
+      tailable: true,
+    }),
+    new winston.transports.File({
+      filename: 'logs/combined.log',
+      maxsize: 10 * 1024 * 1024,
+      maxFiles: 5,
+      tailable: true,
+    }),
   ],
 });
