@@ -1,0 +1,1154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ENUMS
+// ════════════════════════════════════════════════════════════════════
+
+enum UserRole {
+  admin
+  tecnico
+  cliente
+}
+
+enum TicketStatus {
+  abierto
+  en_progreso
+  en_espera
+  // Distinto de "en_espera" a propósito: este SÍ pausa el reloj de SLA (ver
+  // Ticket.slaPausadoEn) y bloquea el ticket para edición normal (mismo
+  // criterio que "cerrado") hasta que la cotización asociada se resuelva —
+  // ver QuoteService.
+  esperando_aprobacion
+  cerrado
+  cancelado
+}
+
+enum TicketPriority {
+  baja
+  media
+  alta
+  critica
+}
+
+// Eje separado de prioridad (urgencia percibida por quien reporta) — esto es
+// el impacto real del problema. El SLA sale de combinar ambos (ver
+// SlaPolicy), no de la prioridad sola.
+enum TicketCriticidad {
+  baja
+  media
+  alta
+  critica
+}
+
+enum DeviceStatus {
+  online
+  offline
+  inactivo
+}
+
+enum OperatingSystem {
+  Windows
+  Linux
+  MacOS
+}
+
+enum NoteType {
+  interna
+  cliente
+  sistema
+  // Documentación de cierre (descripción de la solución + fotos, ver
+  // TicketService.closeTicketWithResolution) — solo la crea el backend al
+  // cerrar un ticket, nunca a mano desde el formulario de notas normal.
+  cierre
+  // Motivo de reapertura (ver TicketService.reopenTicket) — mismo criterio
+  // que "cierre", solo la crea el backend.
+  reapertura
+}
+
+// ── Actividades (trabajo proactivo/programado, distinto de Tickets que es
+// reactivo) — ver bloque de modelos más abajo para el detalle completo.
+enum ActividadTipo {
+  integracion
+  mantenimiento
+  seguimiento
+  otro
+}
+
+enum ActividadEstado {
+  pendiente
+  en_progreso
+  completada
+  cancelada
+}
+
+enum RecurrenciaTipo {
+  diaria
+  semanal
+  mensual
+}
+
+// ════════════════════════════════════════════════════════════════════
+// MODELS
+// ════════════════════════════════════════════════════════════════════
+
+// Companies
+model Company {
+  id            String   @id @default(uuid())
+  nombre        String   @unique
+  razonSocial   String?  @map("razon_social")
+  // Único porque el formulario público de tickets (sin login) identifica la
+  // empresa por NIT — si dos empresas compartieran uno, no habría forma de
+  // saber a cuál pertenece el ticket.
+  nit           String?  @unique
+  emailContacto String?  @map("email_contacto")
+  telefono      String?
+  direccion     String?
+  ciudad        String?
+  pais          String?
+  contrato      String?
+  activo        Boolean  @default(true)
+  // true = alta manual por un admin (o ya lo era antes de este campo).
+  // false = autogenerada por la landing pública de soporte cuando el NIT no
+  // existía (ver companyService.resolveOrProvisionByNit) — el equipo la
+  // revisa desde CompaniesPage y decide si la completa/fusiona/desactiva.
+  verificado    Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Mapea esta empresa a un grupo de Remotely (Device.remotelyGroupId) — así
+  // el poller (remotely.service.ts#updateDeviceStatusCache) puede dar de alta
+  // automáticamente los equipos de ese grupo bajo esta empresa, y mantener
+  // sincronizada la empresa de un equipo si cambia de grupo. @unique porque
+  // un grupo de Remotely solo puede mapear a una empresa. No es un dato
+  // sensible (es solo un ID de agrupación de Remotely), no cifrado.
+  remotelyGroupId String? @unique @map("remotely_group_id")
+
+  // Relations
+  users               User[]
+  devices             Device[]
+  tickets             Ticket[]
+  actividades         Actividad[]
+  actividadPlantillas ActividadPlantilla[]
+  inventoryEquipment  InventoryEquipment[]
+  quotes              Quote[]
+  conversations       Conversation[]
+
+  @@index([activo])
+  @@map("companies")
+}
+
+// Users
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  nombre       String
+  apellido     String?
+  rol          UserRole  @default(cliente)
+  // Solo tiene sentido para rol=tecnico — nivel 1/2/3 usado para la
+  // auto-asignación por categoría (ver TicketCategory.nivelRequerido /
+  // TicketService.pickLeastLoadedTechnician). null = sin nivel asignado
+  // todavía, no participa del reparto automático.
+  nivel        Int?
+  // Capacidades puntuales que se SUMAN al rol base (ver
+  // shared/security/permissions.ts para la lista de strings válidos y
+  // hasPermission()) — reemplaza al viejo esAprobador booleano. admin no
+  // necesita nada acá (hasPermission le da paso libre siempre); esto es para
+  // otorgarle a un usuario cliente/tecnico puntual una capacidad que por
+  // default no tiene, sin agregar una columna nueva por cada feature futura
+  // que necesite lo mismo (ver Configuración → Usuarios).
+  permisos     String[]  @default([])
+  empresaId    String?   @map("empresa_id")
+  empresa      Company?  @relation(fields: [empresaId], references: [id], onDelete: SetNull)
+  activo       Boolean   @default(true)
+  ultimoLogin  DateTime? @map("ultimo_login")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  ticketsReportados       Ticket[]                  @relation("usuario_reporter")
+  ticketsAsignados        Ticket[]                  @relation("usuario_asignado")
+  ticketsResueltos        Ticket[]                  @relation("resuelto_por")
+  notas                   Note[]
+  ticketHistorial         TicketHistory[]
+  sesionesRemotely        RemotelySession[]
+  scriptExecutions        RemotelyScriptExecution[]
+  auditLogs               AuditLog[]
+  actividadesAsignadas    Actividad[]               @relation("actividad_asignado")
+  plantillasAsignadas     ActividadPlantilla[]      @relation("plantilla_asignado")
+  actividadSeguimientos   ActividadSeguimiento[]
+  actasCreadas            ActaEntrega[]
+  quotesCreados           Quote[]                   @relation("quote_creador")
+  quotesAprobados         Quote[]                   @relation("quote_aprobador")
+  notificaciones          Notification[]
+  conversacionesAsignadas Conversation[]            @relation("conversacion_asignada")
+  mensajesEnviados        ConversationMessage[]     @relation("mensaje_conversacion")
+  teamChannelsCreados     TeamChannel[]             @relation("team_channel_creador")
+  teamChannelMemberships  TeamChannelMember[]
+  teamMensajesEnviados    TeamMessage[]             @relation("team_message_autor")
+
+  @@index([empresaId])
+  @@index([rol])
+  @@index([activo])
+  @@map("users")
+}
+
+// Devices
+model Device {
+  id                   String           @id @default(uuid())
+  nombre               String
+  hostname             String?          @unique
+  ipLocal              String?          @map("ip_local")
+  ipPublica            String?          @map("ip_public")
+  empresaId            String           @map("empresa_id")
+  empresa              Company          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  remotelyId           String?          @map("remotely_id") // cifrado en reposo (AES-256-GCM)
+  remotelyIdHash       String?          @unique @map("remotely_id_hash") // HMAC de remotelyId, para poder buscar por él
+  so                   OperatingSystem?
+  versionSo            String?          @map("version_so")
+  cpuCores             Int?
+  ramGb                Int?
+  discoGb              Int?
+  agentVersion         String?          @map("agent_version") // versión del agente de Remotely instalado
+  macAddresses         String[]         @map("mac_addresses") // cada elemento cifrado por separado (AES-256-GCM)
+  // Metadata organizativa sincronizada desde Remotely (grupos/tags/notas que
+  // el usuario ya mantiene allá) — no sensible, no cifrada, igual que
+  // agentVersion. Solo lectura desde nuestro lado: se sobrescribe en cada
+  // ciclo del poller si cambió en Remotely.
+  remotelyAlias        String?          @map("remotely_alias")
+  remotelyTags         String?          @map("remotely_tags")
+  remotelyNotes        String?          @map("remotely_notes")
+  remotelyGroupId      String?          @map("remotely_group_id")
+  remotelyGroupName    String?          @map("remotely_group_name")
+  // Detalle de RAM (tipo, velocidad, slots) — Remotely no lo expone vía API,
+  // se obtiene ejecutando un script (WMI/CIM) contra el equipo. No sensible,
+  // no cifrado. Se sobrescribe cada vez que se corre el análisis manualmente
+  // (no hay poller automático para esto, a diferencia de agentVersion/tags).
+  ramModules           Json?            @map("ram_modules") // RamModuleInfo[]: [{slot, capacityGb, speedMhz, type, manufacturer}]
+  ramSlotsUsed         Int?             @map("ram_slots_used")
+  ramSlotsTotal        Int?             @map("ram_slots_total")
+  ramHardwareScannedAt DateTime?        @map("ram_hardware_scanned_at")
+  // "Hoja de vida" de hardware — igual mecanismo que RAM (script WMI/CIM,
+  // sin poller). uuid/serialNumber/storageSerials son identificadores únicos
+  // de hardware (mismo criterio que remotelyId/macAddresses): cifrados en
+  // reposo y enmascarados en tránsito. El resto (specs, no identifica un
+  // equipo físico específico entre reinstalaciones) va sin cifrar.
+  hwUuid               String?          @map("hw_uuid")
+  hwSerialNumber       String?          @map("hw_serial_number")
+  hwBoardInfo          Json?            @map("hw_board_info") // {motherboard*, bios*} — modelo/versión, no identifica una unidad física
+  hwBattery            Json?            @map("hw_battery")
+  hwCpu                Json?            @map("hw_cpu")
+  hwStorage            Json?            @map("hw_storage") // [{model, interfaceType, mediaType, sizeGb, healthStatus, temperatureC, wearPercent, reallocatedSectors, powerOnHours}] SIN el serial de cada disco
+  hwStorageSerials     String[]         @map("hw_storage_serials") // cifrado por elemento — mismo índice/orden que hwStorage
+  hwGraphics           Json?            @map("hw_graphics") // {gpus:[...], monitors:[{name}]}
+  hwUsbDevices         Json?            @map("hw_usb_devices")
+  hwScannedAt          DateTime?        @map("hw_scanned_at")
+  // Inventario de red — script separado (categoría distinta, botón propio).
+  netInterfaces        Json?            @map("net_interfaces") // [{name, status, speedMbps, ipv4, ipv6, subnetMask, gateway, dhcpServer, dnsServers}] — SIN MAC (ya está en macAddresses, cifrado)
+  netListening         Json?            @map("net_listening") // [{protocol, localPort, process}]
+  netConnections       Json?            @map("net_connections") // [{protocol, localPort, remoteAddress, remotePort, state, process}] — remoteAddress se enmascara en el mapper, no en la BD
+  netScannedAt         DateTime?        @map("net_scanned_at")
+  // Inventario de software instalado — categoría separada por su tamaño (ver
+  // scripts/software-scan.script.ts). Nombres/versiones/editores de programas
+  // no identifican de forma única el hardware físico — no cifrado, a
+  // diferencia de hwUuid/hwSerialNumber/hwStorageSerials.
+  swApps               Json?            @map("sw_apps") // InstalledAppInfo[]: [{name, version, publisher, installDate}]
+  swTotalCount         Int?             @map("sw_total_count")
+  swScannedAt          DateTime?        @map("sw_scanned_at")
+  ultimoContacto       DateTime?        @map("ultimo_contacto")
+  estado               DeviceStatus     @default(offline)
+  activo               Boolean          @default(true)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  // Reportado por el propio .bat de instalación al terminar de aplicar
+  // Harden-agent.script.ts (endurecimiento de permisos NTFS del agente) — ver
+  // POST /api/remotely/harden-report. null = nunca se instaló con el .bat que
+  // genera InsiDesk, o el paso de endurecimiento falló.
+  agentHardenedAt      DateTime?        @map("agent_hardened_at")
+
+  // Relations
+  tickets             Ticket[]
+  sesionesRemotely    RemotelySession[]
+  scriptExecutions    RemotelyScriptExecution[]
+  actividades         Actividad[]
+  actividadPlantillas ActividadPlantilla[]
+
+  @@unique([empresaId, hostname])
+  @@index([empresaId])
+  @@index([estado])
+  @@index([remotelyId])
+  @@map("devices")
+}
+
+// Tickets
+model Ticket {
+  id                 String             @id @default(uuid())
+  titulo             String
+  descripcion        String?
+  estado             TicketStatus       @default(abierto)
+  prioridad          TicketPriority     @default(media)
+  criticidad         TicketCriticidad   @default(media)
+  categoriaId        String?            @map("categoria_id")
+  categoria          TicketCategory?    @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  subcategoriaId     String?            @map("subcategoria_id")
+  subcategoria       TicketSubcategory? @relation(fields: [subcategoriaId], references: [id], onDelete: SetNull)
+  empresaId          String             @map("empresa_id")
+  empresa            Company            @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  // Nulo cuando el ticket viene del formulario público (sin cuenta) — ver
+  // reporterNombre/reporterEmail/reporterTelefono. TicketService.createTicket
+  // exige que exista uno de los dos: usuarioReporterId (flujo autenticado) o
+  // reporterNombre + al menos un contacto (flujo público/telefónico).
+  usuarioReporterId  String?            @map("usuario_reporter_id")
+  usuarioReporter    User?              @relation("usuario_reporter", fields: [usuarioReporterId], references: [id], onDelete: Restrict)
+  reporterNombre     String?            @map("reporter_nombre")
+  reporterEmail      String?            @map("reporter_email")
+  reporterTelefono   String?            @map("reporter_telefono")
+  usuarioAsignadoId  String?            @map("usuario_asignado_id")
+  usuarioAsignado    User?              @relation("usuario_asignado", fields: [usuarioAsignadoId], references: [id], onDelete: SetNull)
+  dispositivoId      String?            @map("dispositivo_id")
+  dispositivo        Device?            @relation(fields: [dispositivoId], references: [id], onDelete: SetNull)
+  tiempoEstimado     Int?               @map("tiempo_estimado")
+  tiempoReal         Int?               @map("tiempo_real")
+  resueltoId         String?            @map("resuelto_por")
+  resuelto           User?              @relation("resuelto_por", fields: [resueltoId], references: [id], onDelete: SetNull)
+  // SLA — calculado al crear el ticket según la matriz Prioridad×Criticidad
+  // (SlaPolicy), no se recalcula si después se cambia prioridad/criticidad
+  // (evita mover la meta a mitad de camino sin que quede explícito en el
+  // historial). primeraRespuestaEn se setea sola con la primera Note tipo
+  // "cliente" — ver TicketService.recordFirstResponse.
+  slaRespuestaVence  DateTime?          @map("sla_respuesta_vence")
+  slaResolucionVence DateTime?          @map("sla_resolucion_vence")
+  primeraRespuestaEn DateTime?          @map("primera_respuesta_en")
+  // No-nulo mientras el ticket está en estado "esperando_aprobacion" — marca
+  // cuándo empezó la pausa. Al resolverse la cotización (aprobada, rechazada,
+  // expirada o cancelada), QuoteService.resumeFromApproval suma el tiempo
+  // transcurrido acá a slaRespuestaVence/slaResolucionVence y limpia este
+  // campo — así el reloj "no corrió" durante la espera.
+  slaPausadoEn       DateTime?          @map("sla_pausado_en")
+  // Tracking de tiempo trabajado (ver TicketService.changeTicketStatus):
+  // trabajoIniciadoEn queda seteado SOLO mientras el estado es "en_progreso"
+  // (marca cuándo arrancó/se reanudó la sesión actual); al pausar, cerrar o
+  // cancelar se acumula el tiempo transcurrido en tiempoReal (minutos) y se
+  // limpia. Permite pausar/reanudar varias veces y sumar el tiempo real de
+  // trabajo, no solo el tiempo total desde apertura hasta cierre.
+  trabajoIniciadoEn  DateTime?          @map("trabajo_iniciado_en")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  closedAt           DateTime?          @map("closed_at")
+
+  // Relations
+  notas            Note[]
+  historial        TicketHistory[]
+  sesionesRemotely RemotelySession[]
+  actividades      Actividad[]
+  cotizaciones     Quote[]
+
+  @@index([empresaId])
+  @@index([estado])
+  @@index([prioridad])
+  @@index([usuarioAsignadoId])
+  @@index([usuarioReporterId])
+  @@index([dispositivoId])
+  @@index([createdAt])
+  @@index([categoriaId])
+  @@index([subcategoriaId])
+  @@map("tickets")
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Configuración de tickets: categorías/subcategorías y matriz de SLA.
+// Niveles de prioridad/criticidad quedan fijos en el enum (decisión
+// explícita: menos riesgo que tickets ya creados queden con un nivel
+// borrado) — lo que el admin configura de verdad son los tiempos de SLA
+// de cada combinación, y las categorías/subcategorías (esas sí abiertas).
+//
+// prioridadDefault/criticidadDefault (nullable en ambos niveles): cuando
+// están definidos, FIJAN ese valor para cualquier ticket de esa categoría/
+// subcategoría — no es solo un valor sugerido, TicketService los impone al
+// crear o actualizar un ticket, ignorando lo que mande el cliente (ver
+// TicketCategoryService.resolveDefaults). Ej: "Impresoras" con
+// criticidadDefault=baja evita que alguien marque como crítico un ticket
+// que no afecta la operación. La subcategoría gana sobre la categoría
+// cuando ambas definen un valor; si ninguna define nada, se vuelve al
+// comportamiento libre de siempre (el que crea el ticket elige).
+//
+// nivelRequerido (1/2/3, mismo criterio de merge subcategoría>categoría):
+// determina qué nivel de técnico debe atender un ticket de esa categoría —
+// TicketService.createTicket lo usa para auto-asignar al técnico de ese
+// nivel con menos tickets abiertos en la empresa del ticket (ver
+// pickLeastLoadedTechnician). Si no hay ningún técnico activo de ese nivel,
+// el ticket queda sin asignar, igual que si nunca se hubiera configurado.
+// ════════════════════════════════════════════════════════════════════
+
+model TicketCategory {
+  id                String            @id @default(uuid())
+  nombre            String            @unique
+  activo            Boolean           @default(true)
+  prioridadDefault  TicketPriority?   @map("prioridad_default")
+  criticidadDefault TicketCriticidad? @map("criticidad_default")
+  nivelRequerido    Int?              @map("nivel_requerido")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  subcategorias TicketSubcategory[]
+  tickets       Ticket[]
+
+  @@index([activo])
+  @@map("ticket_categories")
+}
+
+model TicketSubcategory {
+  id                String            @id @default(uuid())
+  categoriaId       String            @map("categoria_id")
+  categoria         TicketCategory    @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  nombre            String
+  activo            Boolean           @default(true)
+  prioridadDefault  TicketPriority?   @map("prioridad_default")
+  criticidadDefault TicketCriticidad? @map("criticidad_default")
+  nivelRequerido    Int?              @map("nivel_requerido")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  tickets Ticket[]
+
+  @@unique([categoriaId, nombre])
+  @@index([categoriaId])
+  @@map("ticket_subcategories")
+}
+
+// Matriz completa Prioridad×Criticidad (4x4 = 16 filas, siempre todas
+// presentes — TicketConfigService.ensureSeeded() completa las que falten con
+// valores por defecto). No hay "activo": no tiene sentido una combinación
+// deshabilitada, siempre hay que poder calcular un SLA para cualquier ticket.
+model SlaPolicy {
+  id                  String           @id @default(uuid())
+  prioridad           TicketPriority
+  criticidad          TicketCriticidad
+  tiempoRespuestaMin  Int              @map("tiempo_respuesta_min")
+  tiempoResolucionMin Int              @map("tiempo_resolucion_min")
+  updatedAt           DateTime         @updatedAt
+
+  @@unique([prioridad, criticidad])
+  @@map("sla_policies")
+}
+
+// Qué niveles de ticket (nivel de la categoría/subcategoría, ver
+// TicketCategory.nivelRequerido) puede VER cada nivel de técnico al
+// navegar la lista general — no afecta un ticket ya asignado directamente a
+// ese técnico, eso siempre se ve (ver TicketService.getTickets). A
+// diferencia de SlaPolicy, NO se pre-siembra entera: una fila ausente
+// significa "visible" (comportamiento de hoy, sin restricción) — un admin
+// solo crea filas para las combinaciones que quiere DESACTIVAR.
+model TicketLevelVisibility {
+  id           String   @id @default(uuid())
+  nivelTecnico Int      @map("nivel_tecnico")
+  nivelTicket  Int      @map("nivel_ticket")
+  visible      Boolean  @default(true)
+  updatedAt    DateTime @updatedAt
+
+  @@unique([nivelTecnico, nivelTicket])
+  @@map("ticket_level_visibility")
+}
+
+// Ticket Notes
+model Note {
+  id        String   @id @default(uuid())
+  ticketId  String   @map("ticket_id")
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  usuarioId String   @map("usuario_id")
+  usuario   User     @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  contenido String
+  tipo      NoteType @default(interna)
+  // Rutas relativas servidas por GET /tickets/:id/attachments/:filename (NO
+  // son URLs públicas — ese endpoint exige estar autenticado y pertenecer a
+  // la empresa del ticket antes de devolver el archivo). Solo se completa en
+  // notas tipo "cierre".
+  adjuntos  String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ticketId])
+  @@index([usuarioId])
+  @@map("notes")
+}
+
+// Ticket History
+model TicketHistory {
+  id              String   @id @default(uuid())
+  ticketId        String   @map("ticket_id")
+  ticket          Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  campoModificado String   @map("campo_modificado")
+  valorAnterior   String?  @map("valor_anterior")
+  valorNuevo      String?  @map("valor_nuevo")
+  usuarioId       String   @map("usuario_id")
+  usuario         User     @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  razon           String?
+  createdAt       DateTime @default(now())
+
+  @@index([ticketId])
+  @@index([usuarioId])
+  @@index([createdAt])
+  @@map("ticket_history")
+}
+
+// Remotely Sessions
+model RemotelySession {
+  id                String    @id @default(uuid())
+  ticketId          String?   @map("ticket_id")
+  ticket            Ticket?   @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  dispositivoId     String    @map("dispositivo_id")
+  dispositivo       Device    @relation(fields: [dispositivoId], references: [id], onDelete: Restrict)
+  usuarioId         String    @map("usuario_id")
+  usuario           User      @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  remotelySessionId String?   @map("remotely_session_id") // cifrado en reposo (AES-256-GCM); no se busca por este campo, no necesita blind index
+  fechaInicio       DateTime  @default(now()) @map("fecha_inicio")
+  fechaFin          DateTime? @map("fecha_fin")
+  duracionMinutos   Int?      @map("duracion_minutos")
+  notas             String?
+  createdAt         DateTime  @default(now())
+
+  @@index([ticketId])
+  @@index([dispositivoId])
+  @@index([usuarioId])
+  @@index([fechaInicio])
+  @@map("remotely_sessions")
+}
+
+// Remotely Scripts Execution
+// scriptId es opcional: nuestra pantalla de "Ejecutar script" manda comandos
+// ad-hoc (no scripts guardados en Remotely, que ni siquiera se pueden listar
+// vía su API — ver SavedScriptsController), así que no siempre hay un id de
+// Remotely que asociar. estado se resuelve en un solo paso porque
+// executeScript() es síncrono (espera la respuesta del agente) — no hay un
+// estado "running" persistido.
+model RemotelyScriptExecution {
+  id               String    @id @default(uuid())
+  ticketId         String?   @map("ticket_id")
+  dispositivoId    String    @map("dispositivo_id")
+  dispositivo      Device    @relation(fields: [dispositivoId], references: [id], onDelete: Restrict)
+  usuarioId        String    @map("usuario_id")
+  usuario          User      @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  scriptId         String?   @map("script_id")
+  scriptNombre     String?   @map("script_nombre")
+  shell            String? // powershell | bash | cmd (nuestro tipo, no el "mode" de Remotely)
+  estado           String // completed, failed (a nivel HTTP/infra — ver errorMessage para errores del script mismo)
+  output           String? // JSON.stringify del ScriptResult real de Remotely (standardOutput/errorOutput/hadErrors/runTime)
+  errorMessage     String?   @map("error_mensaje") // falla de infra, o el errorOutput del script si hadErrors=true
+  duracionSegundos Int?      @map("duracion_segundos")
+  createdAt        DateTime  @default(now())
+  completedAt      DateTime? @map("completed_at")
+
+  @@index([dispositivoId])
+  @@index([usuarioId])
+  @@index([createdAt])
+  @@map("remotely_scripts_execution")
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Actividades — trabajo proactivo/programado de un MSP (revisión de
+// backups, integraciones, seguimientos post-incidente), a diferencia de
+// Tickets que es reactivo (alguien reporta un problema). Una actividad
+// puede nacer de un ticket (ticketId opcional) o vivir sola, y puede
+// escalar a un Acta de entrega cuando el trabajo necesita quedar
+// formalmente documentado y firmado por el cliente.
+// ════════════════════════════════════════════════════════════════════
+
+model Actividad {
+  id                String          @id @default(uuid())
+  titulo            String
+  descripcion       String?
+  tipo              ActividadTipo   @default(otro)
+  estado            ActividadEstado @default(pendiente)
+  empresaId         String          @map("empresa_id")
+  empresa           Company         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuarioAsignadoId String?         @map("usuario_asignado_id")
+  usuarioAsignado   User?           @relation("actividad_asignado", fields: [usuarioAsignadoId], references: [id], onDelete: SetNull)
+  ticketId          String?         @map("ticket_id")
+  ticket            Ticket?         @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  dispositivoId     String?         @map("dispositivo_id")
+  dispositivo       Device?         @relation(fields: [dispositivoId], references: [id], onDelete: SetNull)
+  fechaPlaneada     DateTime?       @map("fecha_planeada")
+  fechaCompletada   DateTime?       @map("fecha_completada")
+  // Qué se hizo — obligatorio para poder pasar a "completada" (ver
+  // ActivityService.changeStatus), distinto del acta de entrega: esto
+  // siempre queda registrado, se genere o no un acta después. El acta, si
+  // se genera, reusa este texto en vez de volver a pedirlo.
+  resultado         String?
+  // Fotos de evidencia del cierre (hasta 5) — mismo patrón que Note.adjuntos
+  // en tickets: rutas relativas servidas por un endpoint autenticado, no son
+  // URLs públicas.
+  resultadoAdjuntos String[]        @default([]) @map("resultado_adjuntos")
+
+  // Si esta actividad fue generada automáticamente por una plantilla
+  // recurrente (ver ActividadPlantilla + ActivityRecurrenceScheduler),
+  // queda la referencia — sirve para no duplicar la del mismo período y
+  // para que la UI muestre "generada por: Revisión semanal de backups".
+  plantillaId String?             @map("plantilla_id")
+  plantilla   ActividadPlantilla? @relation(fields: [plantillaId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  seguimientos ActividadSeguimiento[]
+  acta         ActaEntrega?
+
+  @@index([empresaId])
+  @@index([usuarioAsignadoId])
+  @@index([estado])
+  @@index([fechaPlaneada])
+  @@index([plantillaId])
+  @@map("actividades")
+}
+
+// Definición de una actividad recurrente — ActivityRecurrenceScheduler (cron,
+// ver server.ts) la revisa periódicamente y genera una nueva Actividad
+// cuando corresponde según recurrenciaTipo/recurrenciaDia, comparando contra
+// ultimaGeneracion para no duplicar dentro del mismo período.
+model ActividadPlantilla {
+  id                String          @id @default(uuid())
+  titulo            String
+  descripcion       String?
+  tipo              ActividadTipo   @default(otro)
+  empresaId         String          @map("empresa_id")
+  empresa           Company         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuarioAsignadoId String?         @map("usuario_asignado_id")
+  usuarioAsignado   User?           @relation("plantilla_asignado", fields: [usuarioAsignadoId], references: [id], onDelete: SetNull)
+  dispositivoId     String?         @map("dispositivo_id")
+  dispositivo       Device?         @relation(fields: [dispositivoId], references: [id], onDelete: SetNull)
+  recurrenciaTipo   RecurrenciaTipo @map("recurrencia_tipo")
+  // Semanal: 0(domingo)-6(sábado). Mensual: día del mes, 1-28 (acotado a 28
+  // para que siempre exista ese día sin importar el mes). Diaria: se ignora.
+  recurrenciaDia    Int?            @map("recurrencia_dia")
+  activo            Boolean         @default(true)
+  ultimaGeneracion  DateTime?       @map("ultima_generacion")
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  actividades Actividad[]
+
+  @@index([empresaId])
+  @@index([activo])
+  @@map("actividad_plantillas")
+}
+
+model ActividadSeguimiento {
+  id          String    @id @default(uuid())
+  actividadId String    @map("actividad_id")
+  actividad   Actividad @relation(fields: [actividadId], references: [id], onDelete: Cascade)
+  usuarioId   String    @map("usuario_id")
+  usuario     User      @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  contenido   String
+  createdAt   DateTime  @default(now())
+
+  @@index([actividadId])
+  @@map("actividad_seguimientos")
+}
+
+// Documento formal de cierre de una actividad — resumen del trabajo + firma
+// dibujada del cliente + envío por correo (ver ActaService, PDF generado con
+// pdfkit y enviado vía Resend). 1 a 1 con Actividad: una actividad tiene a lo
+// sumo un acta.
+model ActaEntrega {
+  id          String    @id @default(uuid())
+  actividadId String    @unique @map("actividad_id")
+  actividad   Actividad @relation(fields: [actividadId], references: [id], onDelete: Cascade)
+  contenido   String
+  firmaNombre String    @map("firma_nombre")
+  // Ruta relativa servida por un endpoint autenticado, mismo patrón que los
+  // adjuntos de cierre de ticket (ver Note.adjuntos) — no es una URL pública.
+  firmaImagen String    @map("firma_imagen")
+  firmadoEn   DateTime  @map("firmado_en")
+  // El PDF ya generado se guarda en disco para poder reenviarlo sin tener
+  // que reconstruirlo (y para servirlo si el admin quiere descargarlo).
+  pdfPath     String?   @map("pdf_path")
+  enviadoA    String?   @map("enviado_a")
+  enviadoEn   DateTime? @map("enviado_en")
+  creadoPorId String    @map("creado_por_id")
+  creadoPor   User      @relation(fields: [creadoPorId], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("actas_entrega")
+}
+
+// ════════════════════════════════════════════════════════════════════
+// AUDIT & SECURITY
+// ════════════════════════════════════════════════════════════════════
+
+// Audit Log
+model AuditLog {
+  id                String   @id @default(uuid())
+  usuarioId         String?  @map("usuario_id")
+  usuario           User?    @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  accion            String
+  tabla             String
+  registroId        String?  @map("registro_id")
+  cambiosAnteriores Json?    @map("cambios_anteriores")
+  cambiosNuevos     Json?    @map("cambios_nuevos")
+  ipAddress         String?  @map("ip_address")
+  userAgent         String?  @map("user_agent")
+  resultado         String // success, failure
+  errorMessage      String?  @map("error_mensaje")
+  // Solo se llena para acciones marcadas como críticas (cambio de rol,
+  // borrado de ticket/dispositivo, desactivar empresa) — ver
+  // shared/security/critical-action.service.ts. El resto de las filas (el
+  // auto-audit genérico de cualquier create/update/delete) queda sin motivo.
+  motivo            String?
+  createdAt         DateTime @default(now())
+
+  @@index([usuarioId])
+  @@index([tabla])
+  @@index([createdAt])
+  @@map("audit_log")
+}
+
+// Failed Login Attempts
+model FailedLoginAttempt {
+  id        String   @id @default(uuid())
+  email     String
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  razon     String
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@map("failed_login_attempts")
+}
+
+// In-app notifications — la campanita del nav. Ver
+// shared/events/event.emitter.ts para los eventos de dominio que las
+// disparan y features/notifications/services/notification.service.ts para
+// los listeners que las encolan.
+model Notification {
+  id        String   @id @default(uuid())
+  usuarioId String   @map("usuario_id")
+  usuario   User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  titulo    String
+  mensaje   String
+  // Ruta del frontend a la que navega al hacer click (ej. "/tickets/xxx") —
+  // null si la notificación no tiene un destino propio.
+  link      String?
+  leida     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([usuarioId, leida])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PLATFORM SETTINGS
+// ════════════════════════════════════════════════════════════════════
+
+// Config global de integraciones externas (hoy: solo Remotely). Una única fila
+// ("singleton", id fijo) — no es por empresa.
+//
+// El API key de Remotely son en realidad DOS valores (ver Account → API
+// Access en Remotely): un ID de token (no es secreto, Remotely lo muestra
+// permanentemente en su tabla de tokens) y un secreto (se muestra una sola
+// vez al crearlo). Se guardan por separado — remotelyApiKeyId en claro (para
+// poder mostrarlo en la UI y que el admin confirme qué token está activo) y
+// remotelyApiKeySecret cifrado (AES-256-GCM, nunca sale en texto plano por la
+// API; solo un flag remotelyApiKeySet en la respuesta). El header que espera
+// Remotely (X-Api-Key) se arma concatenando "id:secreto" en tiempo de uso.
+//
+// remotelyOrganizationId queda como columna huérfana: se confirmó contra el
+// código fuente de Remotely que el organizationId NO se manda por el
+// cliente — el servidor lo resuelve a partir del propio API key.
+model PlatformSettings {
+  id                           String    @id @default("singleton")
+  remotelyServerUrl            String?   @map("remotely_server_url")
+  remotelyApiKeyId             String?   @map("remotely_api_key_id")
+  remotelyApiKeySecret         String?   @map("remotely_api_key_secret")
+  remotelyOrganizationId       String?   @map("remotely_organization_id")
+  // Último hash (SHA-256) conocido del paquete de auto-actualización del
+  // agente de Remotely para Windows, y cuándo se verificó — ver
+  // remotely-package-integrity.scheduler.ts. No lo edita el admin desde acá.
+  remotelyPackageHash          String?   @map("remotely_package_hash")
+  remotelyPackageHashCheckedAt DateTime? @map("remotely_package_hash_checked_at")
+
+  // WhatsApp Business Cloud API (Meta, oficial — sin intermediario tipo
+  // Twilio). whatsappAccessToken, whatsappAppSecret y whatsappWebhookVerifyToken
+  // se cifran igual que remotelyApiKeySecret (AES-256-GCM, nunca en claro
+  // por la API, solo flags xxxSet en la respuesta).
+  whatsappPhoneNumberId      String?   @map("whatsapp_phone_number_id")
+  whatsappBusinessAccountId  String?   @map("whatsapp_business_account_id")
+  whatsappAccessToken        String?   @map("whatsapp_access_token")
+  // App Secret de la app de Meta (NO es el access token) — se usa para
+  // validar la firma X-Hub-Signature-256 de cada request del webhook, ver
+  // features/whatsapp/services/whatsapp-client.service.ts.
+  whatsappAppSecret          String?   @map("whatsapp_app_secret")
+  whatsappWebhookVerifyToken String?   @map("whatsapp_webhook_verify_token")
+  whatsappConfiguredAt       DateTime? @map("whatsapp_configured_at")
+
+  // IA para un chat más humanizado a futuro — aiApiKey cifrado con el mismo
+  // criterio. aiEnabled apagado por default: guardar la key no activa nada
+  // todavía, activar la respuesta con IA es trabajo posterior.
+  aiProvider     String? @map("ai_provider")
+  aiModel        String? @map("ai_model")
+  aiApiKey       String? @map("ai_api_key")
+  aiEnabled      Boolean @default(false) @map("ai_enabled")
+  // Contenido del .md que carga el admin (tono, pasos básicos de soporte,
+  // cuándo crear ticket/derivar) — texto plano, no es secreto, se manda tal
+  // cual como parte del system prompt en cada llamada (ver
+  // features/ai/services/ai-client.service.ts).
+  aiSystemPrompt String? @map("ai_system_prompt")
+
+  // Envío de correo — Resend (vía env vars, comportamiento de siempre) o
+  // SMTP propio (Gmail/Office365 con contraseña de aplicación, etc.). Ver
+  // features/notifications/jobs/send-email.job.ts: sin esto configurado,
+  // sigue funcionando por Resend exactamente como hoy.
+  emailProvider String?  @map("email_provider") // 'resend' | 'smtp'
+  smtpHost      String?  @map("smtp_host")
+  smtpPort      Int?     @map("smtp_port")
+  smtpUser      String?  @map("smtp_user")
+  smtpPassword  String?  @map("smtp_password") // cifrado
+  smtpFrom      String?  @map("smtp_from")
+  smtpSecure    Boolean? @map("smtp_secure")
+
+  // Empresa a la que quedan asociados los tickets del bot cuando quien
+  // reporta no tiene NIT (soporte a un particular) — evita autoprovisionar
+  // una Company nueva por cada persona sin empresa, ver
+  // public-ticket.controller.ts. Sin relación FK estricta a propósito:
+  // Company se desactiva, no se borra, así que no hay riesgo real de
+  // referencia colgada, y evita tener que tocar este singleton si alguna
+  // vez se reestructura Company.
+  defaultCompanyId String? @map("default_company_id")
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?  @map("updated_by_id")
+
+  @@map("platform_settings")
+}
+
+// Árbol de decisiones del chatbot de soporte (landing pública) — un solo
+// árbol activo a la vez, no multi-flow (alcance v1). "arbol" queda como Json
+// porque un árbol con ramas no entra en una tabla de matriz plana (a
+// diferencia de TicketLevelVisibility, que sí es clave-compuesta): forma
+// esperada { root: string, nodes: { [id]: { mensaje: string, opciones: {
+// texto: string, siguienteId?: string, accion?: 'crear_ticket' |
+// 'hablar_con_agente' | 'fin' }[] } } }.
+model ChatbotConfig {
+  id          String   @id @default("singleton")
+  activo      Boolean  @default(false)
+  arbol       Json
+  updatedAt   DateTime @updatedAt
+  updatedById String?  @map("updated_by_id")
+
+  @@map("chatbot_config")
+}
+
+// ════════════════════════════════════════════════════════════════════
+// INVENTARIO (equipos de red/seguridad cargados a mano — routers, switches,
+// APs, impresoras, DVRs, cámaras IP, control de accesos)
+// ════════════════════════════════════════════════════════════════════
+
+// A diferencia de Device (PCs con agente de Remotely, con hoja de vida de
+// hardware auto-escaneada), este equipo lo carga un técnico a mano y no
+// tiene agente — un solo modelo con `tipo` + `atributos` (JSON) para lo
+// específico de cada tipo, en vez de una tabla por tipo: la lista/exportación
+// "inventario general" necesita recorrer todos los tipos como una sola
+// colección, y la mayoría de los campos (marca, modelo, serie, ubicación,
+// IP, garantía) son comunes a los siete tipos.
+enum InventoryEquipmentType {
+  router
+  switch
+  access_point
+  impresora
+  dvr
+  camara_ip
+  control_acceso
+}
+
+enum InventoryEquipmentStatus {
+  activo
+  en_reparacion
+  dado_de_baja
+}
+
+model InventoryEquipment {
+  id                 String                   @id @default(uuid())
+  empresaId          String                   @map("empresa_id")
+  empresa            Company                  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tipo               InventoryEquipmentType
+  nombre             String
+  marca              String?
+  modelo             String?
+  // Identificadores/red — mismo criterio que Device: cifrados en reposo (ver
+  // shared/prisma/middleware/encryption.middleware.ts). A diferencia de
+  // Device no hay necesidad de buscar por estos campos, así que no llevan
+  // blind index.
+  numeroSerie        String?                  @map("numero_serie")
+  ipAddress          String?                  @map("ip_address")
+  macAddress         String?                  @map("mac_address")
+  ubicacion          String?
+  proveedor          String?
+  fechaCompra        DateTime?                @map("fecha_compra")
+  garantiaVence      DateTime?                @map("garantia_vence")
+  estado             InventoryEquipmentStatus @default(activo)
+  // Credenciales de administración del equipo — cifradas en reposo, y a
+  // propósito EXCLUIDAS de toda exportación (CSV/Excel/PDF, ver
+  // inventory.service.ts): un archivo exportado puede terminar fuera del
+  // sistema (correo, USB, carpeta compartida), así que solo se muestran
+  // dentro de la app a admin/técnico.
+  credencialUsuario  String?                  @map("credencial_usuario")
+  credencialPassword String?                  @map("credencial_password")
+  // Notas de configuración sensibles (VLANs, SNMP, reglas de port-forwarding,
+  // credenciales secundarias) — mismo criterio que las credenciales: cifradas,
+  // nunca en exportaciones.
+  notasConfiguracion String?                  @map("notas_configuracion")
+  // Notas generales, no sensibles (ej. "revisar en la próxima visita") — sí
+  // puede ir en exportaciones.
+  notas              String?
+  // Específico de cada tipo — ej. switch: {puertos, poe}; camara_ip/dvr:
+  // {canales, resolucion}; access_point: {ssid, banda}; control_acceso:
+  // {puertas, capacidadUsuarios}. Sin tabla por tipo para no multiplicar
+  // migraciones cada vez que un tipo necesita un campo nuevo.
+  atributos          Json?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  @@index([empresaId])
+  @@index([tipo])
+  @@index([estado])
+  @@map("inventory_equipment")
+}
+
+// ════════════════════════════════════════════════════════════════════
+// COTIZACIONES / APROBACIÓN DE CAMBIOS (workflow de autorización)
+// ════════════════════════════════════════════════════════════════════
+
+enum QuoteEstado {
+  borrador
+  pendiente_aprobacion
+  aprobado
+  rechazado
+  expirado
+}
+
+// Compra de insumos/servicios o cambio de infraestructura que requiere
+// autorización previa del cliente antes de proceder — se genera desde un
+// ticket, pausa su SLA mientras espera respuesta (ver Ticket.slaPausadoEn /
+// TicketService.pauseForApproval), y se resuelve por dos canales posibles
+// (link con token sin login, o logueado si el aprobador tiene cuenta) — ver
+// quote-token.service.ts.
+model Quote {
+  id        String      @id @default(uuid())
+  ticketId  String      @map("ticket_id")
+  ticket    Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  empresaId String      @map("empresa_id")
+  empresa   Company     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  razon     String
+  estado    QuoteEstado @default(borrador)
+
+  // Calculados desde QuoteLineItem al guardar (ver QuoteService) — no se
+  // recalculan solos si las líneas cambian después sin pasar por el service.
+  subtotal  Decimal @default(0) @db.Decimal(12, 2)
+  impuestos Decimal @default(0) @db.Decimal(12, 2)
+  total     Decimal @default(0) @db.Decimal(12, 2)
+
+  creadoPorId String @map("creado_por_id")
+  creadoPor   User   @relation("quote_creador", fields: [creadoPorId], references: [id], onDelete: Restrict)
+
+  // Quién puede aprobar — un usuario cliente con el permiso "quotes:approve"
+  // en esa empresa (ver User.permisos), elegido al enviar la cotización.
+  contactoAutorizadorId String? @map("contacto_autorizador_id")
+  contactoAutorizador   User?   @relation("quote_aprobador", fields: [contactoAutorizadorId], references: [id], onDelete: SetNull)
+
+  // A qué estado volver el ticket al resolverse esta solicitud puntual (si ya
+  // estaba en_progreso o en_espera antes, es lo que se restaura) — no vive en
+  // Ticket porque es específico de esta cotización, no del ticket en general.
+  ticketEstadoPrevio TicketStatus?
+
+  // Token de acceso público (link de aprobación sin login) — se guarda el
+  // HASH (HMAC), nunca el token en claro, mismo criterio que una contraseña.
+  tokenHash      String?   @unique @map("token_hash")
+  tokenExpiresAt DateTime? @map("token_expires_at")
+
+  // Trazabilidad de la resolución (aprobación o rechazo), capturada del lado
+  // del servidor — nunca confiando en lo que mande el cliente. resueltoIp
+  // cifrado en reposo (ver encryption.middleware.ts), igual criterio que
+  // Device.ipLocal. firmaImagen solo se llena si aprobó (rechazar no firma).
+  resueltoNombre    String?   @map("resuelto_nombre")
+  resueltoIp        String?   @map("resuelto_ip")
+  resueltoUserAgent String?   @map("resuelto_user_agent")
+  resueltoEn        DateTime? @map("resuelto_en")
+  firmaImagen       String?   @map("firma_imagen")
+  motivoRechazo     String?   @map("motivo_rechazo")
+  pdfPath           String?   @map("pdf_path")
+
+  // Documentos de soporte subidos por el técnico (cotización del proveedor,
+  // ficha técnica, fotos del repuesto, etc.) — rutas relativas servidas por
+  // un endpoint autenticado, cada elemento nombrado "{uuid}__{nombre
+  // original saneado}" para poder mostrar/descargar con el nombre real sin
+  // confiar en el nombre de archivo del cliente para la ruta en disco (ver
+  // quote-document-upload.middleware.ts).
+  documentos String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lineas QuoteLineItem[]
+
+  @@index([ticketId])
+  @@index([empresaId])
+  @@index([estado])
+  @@map("quotes")
+}
+
+model QuoteLineItem {
+  id                 String   @id @default(uuid())
+  quoteId            String   @map("quote_id")
+  quote              Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  concepto           String
+  cantidad           Decimal  @db.Decimal(10, 2)
+  valorUnitario      Decimal  @map("valor_unitario") @db.Decimal(12, 2)
+  porcentajeImpuesto Decimal  @default(0) @map("porcentaje_impuesto") @db.Decimal(5, 2)
+  // cantidad * valorUnitario — calculado por QuoteService al guardar, no en
+  // la base (evita depender de un trigger de Postgres para algo tan simple).
+  subtotal           Decimal  @db.Decimal(12, 2)
+  createdAt          DateTime @default(now())
+
+  @@index([quoteId])
+  @@map("quote_line_items")
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CONVERSACIONES (inbox omnicanal — v1: solo canal "web", un widget de
+// chat en una landing page pública para gente de una empresa cliente sin
+// acceso al portal. El enum de canal ya deja lugar para whatsapp/slack/
+// teams/email más adelante, sin necesitar otro modelo.)
+// ════════════════════════════════════════════════════════════════════
+
+enum ConversationChannel {
+  web
+  whatsapp
+}
+
+enum ConversationStatus {
+  abierta
+  cerrada
+}
+
+enum MessageSender {
+  contacto // la persona externa, sin cuenta en el sistema
+  staff // admin/tecnico
+}
+
+model Conversation {
+  id                String              @id @default(uuid())
+  empresaId         String              @map("empresa_id")
+  empresa           Company             @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  canal             ConversationChannel @default(web)
+  estado            ConversationStatus  @default(abierta)
+  contactoNombre    String              @map("contacto_nombre")
+  contactoEmail     String?             @map("contacto_email")
+  contactoTelefono  String?             @map("contacto_telefono")
+  // Acceso anónimo sin login — mismo patrón que Quote.tokenHash (hash vía
+  // encryptionService.blindIndex, el token real solo vive en el localStorage
+  // del navegador del visitante). Sin expiración a propósito: a diferencia
+  // del link de aprobación de cotización (una sola acción), acá es "volver a
+  // la misma conversación" indefinidamente, como cualquier widget de chat.
+  tokenHash         String              @unique @map("token_hash")
+  usuarioAsignadoId String?             @map("usuario_asignado_id")
+  usuarioAsignado   User?               @relation("conversacion_asignada", fields: [usuarioAsignadoId], references: [id], onDelete: SetNull)
+  // Simple a propósito para v1: cualquier staff que abre la conversación la
+  // marca leída para todos (no hay "leído por mí" individual) — mismo
+  // criterio de acceso abierto que ya tienen los tickets entre técnicos.
+  tieneNoLeidos     Boolean             @default(true) @map("tiene_no_leidos")
+  ultimoMensajeEn   DateTime            @default(now()) @map("ultimo_mensaje_en")
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  mensajes ConversationMessage[]
+
+  @@index([empresaId])
+  @@index([estado])
+  @@index([ultimoMensajeEn])
+  @@map("conversations")
+}
+
+model ConversationMessage {
+  id              String        @id @default(uuid())
+  conversationId  String        @map("conversation_id")
+  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  remitenteTipo   MessageSender @map("remitente_tipo")
+  remitenteUserId String?       @map("remitente_user_id")
+  remitenteUser   User?         @relation("mensaje_conversacion", fields: [remitenteUserId], references: [id], onDelete: SetNull)
+  contenido       String
+  createdAt       DateTime      @default(now())
+
+  @@index([conversationId, createdAt])
+  @@map("conversation_messages")
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CHAT INTERNO DE EQUIPO (admin/tecnico entre ellos — DMs y canales
+// grupales son el MISMO modelo, un DM es un canal de 2 miembros sin
+// nombre propio. No confundir con Conversation: ahí uno de los dos lados
+// es un contacto externo sin cuenta; acá los dos lados son User.)
+// ════════════════════════════════════════════════════════════════════
+
+enum TeamChannelType {
+  dm
+  grupo
+}
+
+model TeamChannel {
+  id          String          @id @default(uuid())
+  tipo        TeamChannelType
+  // Solo para grupo — un DM se muestra con el nombre del otro participante,
+  // no tiene nombre propio.
+  nombre      String?
+  createdById String          @map("created_by_id")
+  createdBy   User            @relation("team_channel_creador", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  miembros TeamChannelMember[]
+  mensajes TeamMessage[]
+
+  @@map("team_channels")
+}
+
+model TeamChannelMember {
+  id              String      @id @default(uuid())
+  channelId       String      @map("channel_id")
+  channel         TeamChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId          String      @map("user_id")
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // null = nunca lo abrió. Comparado contra el último TeamMessage del canal
+  // para decidir "no leído" — POR USUARIO (a diferencia de
+  // Conversation.tieneNoLeidos, que es global para todo el equipo).
+  ultimaLecturaEn DateTime?   @map("ultima_lectura_en")
+  joinedAt        DateTime    @default(now())
+
+  @@unique([channelId, userId])
+  @@map("team_channel_members")
+}
+
+model TeamMessage {
+  id        String      @id @default(uuid())
+  channelId String      @map("channel_id")
+  channel   TeamChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId    String      @map("user_id")
+  user      User        @relation("team_message_autor", fields: [userId], references: [id], onDelete: Cascade)
+  contenido String
+  createdAt DateTime    @default(now())
+
+  @@index([channelId, createdAt])
+  @@map("team_messages")
+}

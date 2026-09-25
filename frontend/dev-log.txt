@@ -1,0 +1,28 @@
+
+> sistema-tickets-frontend@1.0.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 5325 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://172.17.144.1:5173/
+  ➜  Network: http://192.168.0.100:5173/
+  ➜  Network: http://172.20.10.2:5173/
+  ➜  press h + enter to show help
+11:49:10 p.m. [vite] hmr update /src/features/activities/components/CompleteActivityModal.tsx, /src/index.css
+11:49:15 p.m. [vite] hmr update /src/features/activities/components/CompleteActivityModal.tsx, /src/index.css
+11:49:22 p.m. [vite] hmr update /src/features/activities/components/CompleteActivityModal.tsx, /src/index.css
+11:49:28 p.m. [vite] hmr update /src/features/tickets/components/CloseTicketModal.tsx, /src/index.css
+11:49:34 p.m. [vite] hmr update /src/features/tickets/components/CloseTicketModal.tsx, /src/index.css
+11:49:40 p.m. [vite] hmr update /src/features/tickets/components/CloseTicketModal.tsx, /src/index.css
+11:54:14 p.m. [vite] hmr update /src/features/tickets/components/TicketDetail.tsx, /src/index.css
+11:54:19 p.m. [vite] hmr update /src/features/tickets/components/TicketDetail.tsx, /src/index.css
+11:54:26 p.m. [vite] hmr update /src/features/tickets/components/TicketDetail.tsx, /src/index.css
+11:54:43 p.m. [vite] hmr update /src/features/tickets/components/TicketDetail.tsx, /src/index.css
+11:54:50 p.m. [vite] hmr update /src/features/activities/components/ActivityDetail.tsx, /src/index.css
+11:54:55 p.m. [vite] hmr update /src/features/activities/components/ActivityDetail.tsx, /src/index.css
+11:55:02 p.m. [vite] hmr update /src/features/activities/components/ActivityDetail.tsx, /src/index.css
+11:55:13 p.m. [vite] hmr update /src/features/activities/components/ActivityDetail.tsx, /src/index.css
+11:55:27 p.m. [vite] hmr update /src/features/tickets/components/TicketReport.tsx, /src/index.css
+12:12:27 a.m. [vite] hmr update /src/features/tickets/components/CreateTicketModal.tsx, /src/index.css
