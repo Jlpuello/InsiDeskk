@@ -25,6 +25,14 @@ export const env = {
   remotelyApiKey: process.env.REMOTELY_API_KEY ?? '',
   remotelyOrganizationId: process.env.REMOTELY_ORGANIZATION_ID ?? '',
 
+  // Cantidad de proxies confiables delante del backend (nginx del contenedor = 1;
+  // sumar uno más si hay Traefik/NPM/Cloudflare por delante) — ver app.ts.
+  trustProxy: Number(process.env.TRUST_PROXY ?? 1),
+  // Cookies de sesión con flag Secure: los navegadores las descartan sobre HTTP
+  // plano (salvo localhost), así que por defecto solo en producción — y hay que
+  // apagarlo explícitamente si se sirve por HTTP hasta tener TLS.
+  cookieSecure: (process.env.COOKIE_SECURE ?? (process.env.NODE_ENV === 'production' ? 'true' : 'false')) === 'true',
+
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
   // Base para armar links que se mandan por email (aprobación de
   // cotizaciones) — separado de corsOrigin porque ese puede ser una lista.
@@ -40,6 +48,9 @@ export const env = {
 
   rateLimitWindowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 15 * 60 * 1000),
   rateLimitMax: Number(process.env.RATE_LIMIT_MAX ?? 100),
+  // Login/register/refresh por IP en la ventana — freno a fuerza bruta. Solo
+  // se sube en tests (jest.setup.cjs), que hacen muchos logins seguidos.
+  authRateLimitMax: Number(process.env.AUTH_RATE_LIMIT_MAX ?? 10),
 
   redisHost: process.env.REDIS_HOST ?? 'localhost',
   redisPort: Number(process.env.REDIS_PORT ?? 6379),

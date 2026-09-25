@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Menu, LogOut } from 'lucide-react';
 import { useAuthStore } from '../../features/auth/store/auth.store.ts';
+import { authApi } from '../../features/auth/api/auth.api.ts';
 import { NotificationBell } from './NotificationBell.tsx';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { MessagesIndicator } from './MessagesIndicator.tsx';
@@ -18,6 +19,19 @@ export function TopBar({ onOpenMobileNav }: TopBarProps) {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // La cookie de sesión es httpOnly: solo el backend puede borrarla. Si el
+  // request falla igual se limpia el estado local (la sesión vieja ya no sirve
+  // de nada sin la UI que la usa).
+  async function handleLogout() {
+    try {
+      await authApi.logout();
+    } catch {
+      // ignorado a propósito
+    } finally {
+      logout();
+    }
+  }
 
   return (
     <header className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
@@ -58,7 +72,7 @@ export function TopBar({ onOpenMobileNav }: TopBarProps) {
           message="¿Deseás cerrar sesión?"
           confirmLabel="Cerrar sesión"
           onClose={() => setShowLogoutConfirm(false)}
-          onConfirm={logout}
+          onConfirm={handleLogout}
         />
       )}
     </header>

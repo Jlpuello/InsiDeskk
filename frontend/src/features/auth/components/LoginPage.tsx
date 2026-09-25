@@ -18,8 +18,8 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      const { user, accessToken, refreshToken } = await authApi.login(email, password);
-      setSession(user, accessToken, refreshToken);
+      const { user } = await authApi.login(email, password);
+      setSession(user);
       navigate('/tickets');
     } catch {
       setError('Credenciales inválidas');

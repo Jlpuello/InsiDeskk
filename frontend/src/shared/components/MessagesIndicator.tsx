@@ -13,7 +13,7 @@ import { useAuthStore } from '../../features/auth/store/auth.store.ts';
 // natural para revisar, un preview acá solo lo duplicaría.
 export function MessagesIndicator() {
   const navigate = useNavigate();
-  const accessToken = useAuthStore((state) => state.accessToken);
+  const userId = useAuthStore((state) => state.user?.id);
   const [externosUnread, setExternosUnread] = useState(0);
   const [equipoUnread, setEquipoUnread] = useState(0);
 
@@ -23,9 +23,9 @@ export function MessagesIndicator() {
   }, []);
 
   useEffect(() => {
-    if (!accessToken) return;
-    const staffSocket = connectStaffSocket(accessToken);
-    const teamSocket = connectTeamSocket(accessToken);
+    if (!userId) return;
+    const staffSocket = connectStaffSocket();
+    const teamSocket = connectTeamSocket();
 
     staffSocket.on('message', () => {
       conversationApi.unreadCount().then(setExternosUnread).catch(() => {});
@@ -38,7 +38,7 @@ export function MessagesIndicator() {
       staffSocket.disconnect();
       teamSocket.disconnect();
     };
-  }, [accessToken]);
+  }, [userId]);
 
   const unread = externosUnread + equipoUnread;
 

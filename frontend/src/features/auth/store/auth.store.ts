@@ -16,12 +16,9 @@ export interface AuthUser {
 
 interface AuthState {
   user: AuthUser | null;
-  accessToken: string | null;
-  refreshToken: string | null;
-  setSession: (user: AuthUser, accessToken: string, refreshToken: string) => void;
-  // Solo los tokens, sin tocar `user` — usado por el interceptor de
-  // shared/api/client.ts al renovar silenciosamente el access token vencido.
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setSession: (user: AuthUser) => void;
+  // Solo limpia el estado local — la cookie de sesión (httpOnly, no accesible
+  // desde JS) la borra el backend en POST /auth/logout, ver TopBar.tsx.
   logout: () => void;
 }
 
@@ -33,28 +30,19 @@ function readStoredUser(): AuthUser | null {
   }
 }
 
+// Los tokens ya NO viven acá: van en cookies httpOnly que el navegador manda
+// solo (un XSS no puede leerlas). Lo único que se guarda es el perfil del
+// usuario — no es un secreto — para saber si hay sesión y qué mostrar.
 export const useAuthStore = create<AuthState>((set) => ({
   user: readStoredUser(),
-  accessToken: localStorage.getItem('auth_access_token'),
-  refreshToken: localStorage.getItem('auth_refresh_token'),
 
-  setSession: (user, accessToken, refreshToken) => {
+  setSession: (user) => {
     localStorage.setItem('auth_user', JSON.stringify(user));
-    localStorage.setItem('auth_access_token', accessToken);
-    localStorage.setItem('auth_refresh_token', refreshToken);
-    set({ user, accessToken, refreshToken });
-  },
-
-  setTokens: (accessToken, refreshToken) => {
-    localStorage.setItem('auth_access_token', accessToken);
-    localStorage.setItem('auth_refresh_token', refreshToken);
-    set({ accessToken, refreshToken });
+    set({ user });
   },
 
   logout: () => {
     localStorage.removeItem('auth_user');
-    localStorage.removeItem('auth_access_token');
-    localStorage.removeItem('auth_refresh_token');
-    set({ user: null, accessToken: null, refreshToken: null });
+    set({ user: null });
   },
 }));

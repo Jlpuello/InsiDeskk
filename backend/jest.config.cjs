@@ -15,6 +15,7 @@ module.exports = {
   // Sin mocks de entorno: estos son smoke tests de integración a propósito
   // (DB/Redis reales de dev) — env.ts ya hace dotenv.config() al importarse,
   // así que toma el mismo .env que usa `npm run dev`.
+  setupFiles: ['<rootDir>/jest.setup.cjs'],
   testMatch: ['**/__tests__/**/*.test.ts'],
   testTimeout: 15000,
 };

@@ -154,7 +154,7 @@ export function TicketCategoriesSection() {
       <p className="mb-4 text-xs text-gray-400">
         Clasifican de qué trata cada ticket. Desactivar una no borra los tickets que ya la usan, solo deja de
         ofrecerla para tickets nuevos. Si fijás Prioridad o Criticidad acá, todo ticket de esa categoría/subcategoría
-        queda con ese valor sin excepción. El "Nivel" determina a qué técnico se auto-asigna un ticket nuevo de esa
+        queda con ese valor sin excepción. El &quot;Nivel&quot; determina a qué técnico se auto-asigna un ticket nuevo de esa
         categoría (al que menos tickets abiertos tenga en ese nivel) — si no hay ningún técnico activo de ese nivel,
         queda sin asignar. En ambos casos la subcategoría gana sobre la categoría cuando las dos fijan un valor.
       </p>

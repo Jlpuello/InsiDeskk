@@ -2,7 +2,13 @@ import type { Request, Response } from 'express';
 import Joi from 'joi';
 import type { User } from '@prisma/client';
 import { authService } from '../services/auth.service.js';
-import { AppError } from '../../../shared/utils/error.handler.js';
+import { AppError, ForbiddenError } from '../../../shared/utils/error.handler.js';
+import {
+  REFRESH_COOKIE,
+  clearSessionCookies,
+  isCsrfValid,
+  setSessionCookies,
+} from '../../../shared/auth/session-cookies.js';
 
 const registerSchema = Joi.object({
   nombre: Joi.string().min(2).max(150).required(),
@@ -42,14 +48,30 @@ export const AuthController = {
       userAgent: req.headers['user-agent'],
     });
 
-    res.status(200).json({ data: { user: sanitizeUser(user), ...tokens } });
+    // Los tokens viajan solo en cookies httpOnly (ver session-cookies.ts) — el
+    // JS del navegador nunca los ve, así un XSS no puede robar la sesión.
+    setSessionCookies(res, tokens);
+    res.status(200).json({ data: { user: sanitizeUser(user) } });
   },
 
   async refresh(req: Request, res: Response): Promise<void> {
-    const { refreshToken } = req.body as { refreshToken?: string };
+    const cookieToken = req.cookies?.[REFRESH_COOKIE] as string | undefined;
+    const bodyToken = (req.body as { refreshToken?: string } | undefined)?.refreshToken;
+    const refreshToken = cookieToken ?? bodyToken;
     if (!refreshToken) throw new AppError('refreshToken es requerido', 422);
+    if (cookieToken && !isCsrfValid(req)) throw new ForbiddenError('Falta o es inválido el token CSRF');
 
     const tokens = await authService.refresh(refreshToken);
-    res.status(200).json({ data: tokens });
+    setSessionCookies(res, tokens);
+    // Clientes sin cookies (no-browser) siguen recibiendo los tokens en el body.
+    res.status(200).json({ data: cookieToken ? { ok: true } : tokens });
+  },
+
+  async logout(req: Request, res: Response): Promise<void> {
+    if (req.cookies?.[REFRESH_COOKIE] && !isCsrfValid(req)) {
+      throw new ForbiddenError('Falta o es inválido el token CSRF');
+    }
+    clearSessionCookies(res);
+    res.status(200).json({ data: { ok: true } });
   },
 };

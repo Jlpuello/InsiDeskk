@@ -30,7 +30,7 @@ export const globalLimiter = rateLimit({
 // Límite más estricto para endpoints de autenticación (login/register/refresh).
 export const authLimiter = rateLimit({
   windowMs: env.rateLimitWindowMs,
-  max: 10,
+  max: env.authRateLimitMax,
   standardHeaders: true,
   legacyHeaders: false,
   store: redisStore('rl-auth:'),

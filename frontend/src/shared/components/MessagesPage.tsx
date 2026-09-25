@@ -81,7 +81,6 @@ function teamEventToChatMessage(payload: TeamMessageEvent, currentUserId?: strin
 // (ver el comentario de `filters` en ChatBox.tsx — la conversación activa se
 // resuelve siempre contra la lista completa, no la filtrada).
 export function MessagesPage() {
-  const accessToken = useAuthStore((state) => state.accessToken);
   const currentUserId = useAuthStore((state) => state.user?.id);
 
   const [externalConversations, setExternalConversations] = useState<ConversationSummary[]>([]);
@@ -125,9 +124,9 @@ export function MessagesPage() {
   // Dos sockets en paralelo (externo + equipo) — cada uno solo actualiza su
   // propia lista y, si el mensaje es de la conversación abierta, el hilo.
   useEffect(() => {
-    if (!accessToken) return;
-    const staffSocket = connectStaffSocket(accessToken);
-    const teamSocket = connectTeamSocket(accessToken);
+    if (!currentUserId) return;
+    const staffSocket = connectStaffSocket();
+    const teamSocket = connectTeamSocket();
 
     staffSocket.on('message', (payload: ConversationMessageEvent) => {
       loadExternal();
@@ -150,7 +149,7 @@ export function MessagesPage() {
       teamSocket.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]);
+  }, [currentUserId]);
 
   function findExternal(id: string): ConversationSummary | undefined {
     return externalConversations.find((c) => EXT_PREFIX + c.id === id);

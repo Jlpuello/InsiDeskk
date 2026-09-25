@@ -1,3 +1,4 @@
+import { ACCESS_COOKIE, readCookieFromHeader } from '../../../shared/auth/session-cookies.js';
 import { getSocketServer, verifySocketJwt } from '../../../shared/realtime/socket.server.js';
 import { eventEmitter } from '../../../shared/events/event.emitter.js';
 import { teamChannelService } from './team-channel.service.js';
@@ -16,7 +17,8 @@ export function registerTeamChatRealtime(): void {
 
   nsp.use(async (socket, next) => {
     const { token } = socket.handshake.auth as { token?: string };
-    const payload = token ? verifySocketJwt(token) : null;
+    const jwt = token ?? readCookieFromHeader(socket.handshake.headers.cookie, ACCESS_COOKIE);
+    const payload = jwt ? verifySocketJwt(jwt) : null;
     if (!payload || (payload.rol !== 'admin' && payload.rol !== 'tecnico')) {
       next(new Error('No autorizado'));
       return;

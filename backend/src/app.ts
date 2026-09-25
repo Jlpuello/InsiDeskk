@@ -1,6 +1,7 @@
 import express, { type Application } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { getPrismaClient } from './shared/prisma/client.js';
 import { errorHandler, notFoundHandler } from './shared/middleware/errorHandler.js';
 import { verifyJWT } from './shared/middleware/authMiddleware.js';
@@ -43,7 +44,7 @@ export function createApp(): Application {
   // silencio (todo el tráfico cae en el mismo balde). `1` = confiar en un
   // solo salto de proxy, que es la topología típica (un solo reverse proxy
   // delante del backend); ajustar si hay más de un proxy en cadena.
-  app.set('trust proxy', 1);
+  app.set('trust proxy', env.trustProxy);
 
   // getPrismaClient() engancha el middleware de encryption/audit/RBAC la
   // primera vez que se llama (ver shared/prisma/client.ts) — se llama acá para
@@ -84,6 +85,7 @@ export function createApp(): Application {
   });
 
   app.use(globalLimiter);
+  app.use(cookieParser());
   // `verify` guarda el body crudo en req.rawBody — el webhook de WhatsApp
   // necesita esos bytes exactos (no el JSON re-serializado) para validar la
   // firma X-Hub-Signature-256 (ver features/whatsapp). No afecta a nadie más:
