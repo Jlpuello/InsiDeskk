@@ -4,10 +4,17 @@ build/
 .env
 .env.local
 *.log
-backend/logs/*.log
-backend/backups/
-backend/uploads/
+*.tsbuildinfo
+# Sin prefijo backend/ a propósito: si algo corre con el cwd en la raíz en vez
+# de backend/ (pasó durante las pruebas de esta sesión, generó una carpeta
+# logs/ en la raíz), estos patrones igual la agarran.
+logs/
+backups/
+uploads/
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
 coverage/
 .claude/
 dev-log.txt
