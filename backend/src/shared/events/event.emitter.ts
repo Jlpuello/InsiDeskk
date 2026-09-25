@@ -33,6 +33,10 @@ export interface DomainEvents {
     actorId?: string;
   };
   'ticket.assigned': { ticketId: string; usuarioAsignadoId: string; titulo: string };
+  // Al crear/reasignar una actividad con responsable (manual o generada por
+  // una plantilla recurrente, ver activity-recurrence.scheduler.ts) — mismo
+  // criterio que ticket.assigned.
+  'activity.assigned': { actividadId: string; usuarioAsignadoId: string; titulo: string };
   // Notifica al aprobador designado cuando se le manda una cotización — ver
   // QuoteService.sendForApproval. Complementa el email que ya se manda (esto
   // es para el caso de que esté logueado en la app).

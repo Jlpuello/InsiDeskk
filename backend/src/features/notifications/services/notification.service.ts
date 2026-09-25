@@ -129,6 +129,19 @@ export function registerNotificationListeners(): void {
     });
   });
 
+  // Mismo criterio que ticket.assigned — dispara al crear/reasignar una
+  // actividad con responsable, sea manual o generada por una plantilla
+  // recurrente (ver activity-recurrence.scheduler.ts).
+  void eventEmitter.on('activity.assigned', async (payload) => {
+    await service.queueNotification({
+      userId: payload.usuarioAsignadoId,
+      title: 'Actividad asignada',
+      message: `Se te asignó la actividad "${payload.titulo}"`,
+      channel: 'in_app',
+      link: `/activities/${payload.actividadId}`,
+    });
+  });
+
   // A diferencia de ticket.created/ticket.assigned (un solo destinatario
   // fijo), acá puede haber hasta dos: el reporter y el técnico asignado —
   // salvo quien disparó el cambio (actorId), que no necesita que le avisen de

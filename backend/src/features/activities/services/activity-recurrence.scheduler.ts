@@ -1,6 +1,7 @@
 import { CronJob } from 'cron';
 import { env } from '../../../config/env.js';
 import { logger } from '../../../shared/utils/logger.js';
+import { eventEmitter } from '../../../shared/events/event.emitter.js';
 import { activityTemplateRepository } from '../repositories/activity-template.repository.js';
 import { activityRepository } from '../repositories/activity.repository.js';
 import { shouldGenerateToday } from './activity-recurrence.util.js';
@@ -30,7 +31,7 @@ export const activityRecurrenceScheduler = {
       if (!shouldGenerateToday(plantilla, now)) continue;
 
       try {
-        await activityRepository.create({
+        const actividad = await activityRepository.create({
           titulo: plantilla.titulo,
           descripcion: plantilla.descripcion,
           tipo: plantilla.tipo,
@@ -47,6 +48,17 @@ export const activityRecurrenceScheduler = {
         // arriba, la próxima corrida del cron lo vuelve a intentar en vez de
         // marcar el período como "ya generado" sin haberlo generado.
         await activityTemplateRepository.update(plantilla.id, { ultimaGeneracion: now });
+
+        // Mismo evento que ActivityService.create() — el listener de
+        // notifications no distingue si la actividad nació de una plantilla o
+        // se creó a mano.
+        if (plantilla.usuarioAsignadoId) {
+          await eventEmitter.emit('activity.assigned', {
+            actividadId: actividad.id,
+            usuarioAsignadoId: plantilla.usuarioAsignadoId,
+            titulo: actividad.titulo,
+          });
+        }
 
         logger.info(`Actividad generada desde plantilla "${plantilla.titulo}" (${plantilla.id})`);
       } catch (err) {

@@ -1,6 +1,7 @@
 import type { ActividadEstado } from '@prisma/client';
 import { activityRepository } from '../repositories/activity.repository.js';
 import { activityFollowupRepository } from '../repositories/activity-followup.repository.js';
+import { eventEmitter } from '../../../shared/events/event.emitter.js';
 import { AppError, ForbiddenError, NotFoundError } from '../../../shared/utils/error.handler.js';
 import { getCurrentUser, getCurrentUserId } from '../../../shared/utils/context.js';
 import { resolveEmpresaId, assertOwnCompanyOrAdmin } from '../../../shared/security/tenant-scope.js';
@@ -21,7 +22,7 @@ export function assertCanManageActivity(activity: { usuarioAsignadoId: string | 
 
 export class ActivityService {
   async create(data: CreateActivityDTO) {
-    return activityRepository.create({
+    const activity = await activityRepository.create({
       titulo: data.titulo,
       descripcion: data.descripcion,
       tipo: data.tipo ?? 'otro',
@@ -31,6 +32,16 @@ export class ActivityService {
       ...(data.dispositivoId && { dispositivo: { connect: { id: data.dispositivoId } } }),
       ...(data.fechaPlaneada && { fechaPlaneada: data.fechaPlaneada }),
     });
+
+    if (data.usuarioAsignadoId) {
+      await eventEmitter.emit('activity.assigned', {
+        actividadId: activity.id,
+        usuarioAsignadoId: data.usuarioAsignadoId,
+        titulo: activity.titulo,
+      });
+    }
+
+    return activity;
   }
 
   async list(empresaIdInput: string | undefined, filters?: ActivityFilters) {
@@ -55,8 +66,8 @@ export class ActivityService {
   }
 
   async update(id: string, data: UpdateActivityDTO) {
-    await this.getById(id);
-    return activityRepository.update(id, {
+    const existing = await this.getById(id);
+    const activity = await activityRepository.update(id, {
       ...(data.titulo && { titulo: data.titulo }),
       ...(data.descripcion !== undefined && { descripcion: data.descripcion }),
       ...(data.tipo && { tipo: data.tipo }),
@@ -71,6 +82,18 @@ export class ActivityService {
       }),
       ...(data.fechaPlaneada !== undefined && { fechaPlaneada: data.fechaPlaneada }),
     });
+
+    // Solo si realmente cambió a alguien nuevo — evitar renotificar en cada
+    // update() que no toca la asignación (ej. solo cambiar la descripción).
+    if (data.usuarioAsignadoId && data.usuarioAsignadoId !== existing.usuarioAsignadoId) {
+      await eventEmitter.emit('activity.assigned', {
+        actividadId: activity.id,
+        usuarioAsignadoId: data.usuarioAsignadoId,
+        titulo: activity.titulo,
+      });
+    }
+
+    return activity;
   }
 
   // pendiente/en_progreso/cancelada — "completada" NO se acepta acá (mismo
