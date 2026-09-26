@@ -1,11 +1,18 @@
 import { useState, type FormEvent } from 'react';
 import { Modal } from './Modal.tsx';
+import { TemplatePicker } from './TemplatePicker.tsx';
+import type { DocumentationTemplateContext } from '../../features/documentation-templates/types/documentation-template.types.ts';
 
 interface MotivoModalProps {
   title: string;
   subtitle?: string;
   confirmLabel?: string;
   confirmClassName?: string;
+  // Si se pasa, muestra un selector de plantillas (Configuración →
+  // Plantillas) arriba del textarea — ver TemplatePicker.tsx. Sin esto (los
+  // usos existentes: reabrir ticket, borrar, cambiar rol) el modal queda
+  // igual que antes.
+  templateContext?: DocumentationTemplateContext;
   onClose: () => void;
   onConfirm: (motivo: string) => Promise<void>;
 }
@@ -19,6 +26,7 @@ export function MotivoModal({
   subtitle,
   confirmLabel = 'Confirmar',
   confirmClassName = 'bg-red-600 hover:bg-red-700',
+  templateContext,
   onClose,
   onConfirm,
 }: MotivoModalProps) {
@@ -48,6 +56,7 @@ export function MotivoModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">Motivo</label>
+          {templateContext && <TemplatePicker contexto={templateContext} onInsert={setMotivo} />}
           <textarea
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}

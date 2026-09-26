@@ -39,6 +39,9 @@ const updateActivitySchema = Joi.object({
 
 const statusSchema = Joi.object({
   estado: Joi.string().valid(...ESTADOS).required(),
+  // Solo obligatorio al pausar (en_progreso → pendiente) — ver
+  // activity.service.ts#changeStatus.
+  motivo: Joi.string().min(5).max(500).when('estado', { is: 'pendiente', then: Joi.required() }),
 });
 
 const completeActivitySchema = Joi.object({
@@ -119,7 +122,7 @@ export const ActivityController = {
     const { error, value } = statusSchema.validate(req.body);
     if (error) throw new AppError(error.message, 422);
 
-    const activity = await activityService.changeStatus(req.params.id, value.estado);
+    const activity = await activityService.changeStatus(req.params.id, value.estado, value.motivo);
     res.status(200).json({ data: activity });
   },
 

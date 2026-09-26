@@ -1,6 +1,7 @@
 import { useState, type ClipboardEvent, type FormEvent } from 'react';
 import { Modal } from '../../../shared/components/Modal.tsx';
-import { ImagePicker } from '../../../shared/components/ImagePicker.tsx';
+import { EvidenceFilePicker } from '../../../shared/components/EvidenceFilePicker.tsx';
+import { TemplatePicker } from '../../../shared/components/TemplatePicker.tsx';
 import { extractImageFiles } from '../../../shared/utils/clipboardImages.ts';
 import { ticketApi } from '../api/ticket.api.ts';
 import type { Ticket } from '../types/ticket.types.ts';
@@ -50,6 +51,7 @@ export function CloseTicketModal({ ticketId, onClose, onClosed }: CloseTicketMod
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">Descripción de la solución</label>
+          <TemplatePicker contexto="cierre_ticket" onInsert={setContenido} />
           <textarea
             value={contenido}
             onChange={(e) => setContenido(e.target.value)}
@@ -64,9 +66,9 @@ export function CloseTicketModal({ ticketId, onClose, onClosed }: CloseTicketMod
 
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">
-            Fotos de evidencia <span className="font-normal text-gray-400">(opcional, hasta {MAX_IMAGES})</span>
+            Evidencia <span className="font-normal text-gray-400">(fotos o documentos, opcional, hasta {MAX_IMAGES})</span>
           </label>
-          <ImagePicker images={images} onChange={setImages} maxImages={MAX_IMAGES} />
+          <EvidenceFilePicker images={images} onChange={setImages} maxImages={MAX_IMAGES} />
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

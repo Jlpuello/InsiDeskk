@@ -34,6 +34,7 @@ import { teamChatRoutes } from './features/team-chat/index.js';
 import { chatbotRoutes, chatbotPublicRoutes } from './features/chatbot/index.js';
 import { whatsappPublicRoutes } from './features/whatsapp/index.js';
 import { aiChatPublicRoutes } from './features/ai/index.js';
+import { documentationTemplateRoutes } from './features/documentation-templates/index.js';
 
 export function createApp(): Application {
   const app = express();
@@ -141,6 +142,7 @@ export function createApp(): Application {
   app.use('/api/conversations', verifyJWT, conversationRoutes);
   app.use('/api/team-chat', verifyJWT, teamChatRoutes);
   app.use('/api/chatbot', verifyJWT, chatbotRoutes);
+  app.use('/api/documentation-templates', verifyJWT, documentationTemplateRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -10,9 +10,20 @@ import { WhatsappSettingsSection } from './WhatsappSettingsSection.tsx';
 import { AiSettingsSection } from './AiSettingsSection.tsx';
 import { ChatbotSettingsSection } from './ChatbotSettingsSection.tsx';
 import { EmailSettingsSection } from './EmailSettingsSection.tsx';
+import { DocumentationTemplatesSection } from './DocumentationTemplatesSection.tsx';
 import type { RemotelySettings } from '../types/settings.types.ts';
 
-type SettingsTab = 'remotely' | 'categorias' | 'sla' | 'niveles' | 'actividades' | 'whatsapp' | 'chatbot' | 'ia' | 'email';
+type SettingsTab =
+  | 'remotely'
+  | 'categorias'
+  | 'sla'
+  | 'niveles'
+  | 'actividades'
+  | 'whatsapp'
+  | 'chatbot'
+  | 'ia'
+  | 'email'
+  | 'plantillas';
 
 const TABS: { id: SettingsTab; label: string }[] = [
   { id: 'remotely', label: 'Remotely' },
@@ -24,6 +35,7 @@ const TABS: { id: SettingsTab; label: string }[] = [
   { id: 'chatbot', label: 'Chatbot' },
   { id: 'ia', label: 'IA' },
   { id: 'email', label: 'Email' },
+  { id: 'plantillas', label: 'Plantillas' },
 ];
 
 function RemotelySettingsSection() {
@@ -188,6 +200,7 @@ export function SettingsPage() {
       {tab === 'chatbot' && <ChatbotSettingsSection />}
       {tab === 'ia' && <AiSettingsSection />}
       {tab === 'email' && <EmailSettingsSection />}
+      {tab === 'plantillas' && <DocumentationTemplatesSection />}
     </div>
   );
 }

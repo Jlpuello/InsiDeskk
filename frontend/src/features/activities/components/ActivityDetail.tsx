@@ -6,7 +6,9 @@ import { activityApi } from '../api/activity.api.ts';
 import { CreateActaModal } from './CreateActaModal.tsx';
 import { CompleteActivityModal } from './CompleteActivityModal.tsx';
 import { AuthenticatedImage } from '../../../shared/components/AuthenticatedImage.tsx';
+import { AttachmentThumbnail } from '../../../shared/components/AttachmentThumbnail.tsx';
 import { ImageLightbox } from '../../../shared/components/ImageLightbox.tsx';
+import { MotivoModal } from '../../../shared/components/MotivoModal.tsx';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import type { Activity, ActivityFollowup, ActivityStatus, ActivityType } from '../types/activity.types.ts';
 
@@ -33,14 +35,16 @@ const TYPE_LABELS: Record<ActivityType, string> = {
 
 // "Completar" no está acá — abre CompleteActivityModal en vez de cambiar el
 // estado directo, porque exige indicar qué se hizo (ver
-// ActivityService.changeStatus en el backend). pendiente/en_progreso son
-// libres entre sí; completada/cancelada son finales.
+// ActivityService.changeStatus en el backend). "Pausar" (en_progreso →
+// pendiente) tampoco cambia el estado directo — exige motivo, ver
+// handlePauseActivity/showPauseModal más abajo.
 const WORKFLOW_ACTIONS: Record<ActivityStatus, { estado: ActivityStatus; label: string; style: string }[]> = {
   pendiente: [
     { estado: 'en_progreso', label: 'Iniciar', style: 'bg-blue-600 text-white hover:bg-blue-700' },
     { estado: 'cancelada', label: 'Cancelar', style: 'border border-gray-300 text-gray-600 hover:bg-gray-50' },
   ],
   en_progreso: [
+    { estado: 'pendiente', label: 'Pausar', style: 'bg-amber-500 text-white hover:bg-amber-600' },
     { estado: 'cancelada', label: 'Cancelar', style: 'border border-gray-300 text-gray-600 hover:bg-gray-50' },
   ],
   completada: [],
@@ -59,6 +63,7 @@ export function ActivityDetail() {
   const [newFollowup, setNewFollowup] = useState('');
   const [showActaModal, setShowActaModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showPauseModal, setShowPauseModal] = useState(false);
   const [sendTo, setSendTo] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,6 +107,15 @@ export function ActivityDetail() {
     } finally {
       setSavingStatus(false);
     }
+  }
+
+  // "Pausar" (→ pendiente) exige motivo (ver ActivityController#statusSchema)
+  // — por eso no pasa por handleStatusChange directo, sino por MotivoModal.
+  async function handlePauseActivity(motivo: string) {
+    if (!id) return;
+    const updated = await activityApi.changeStatus(id, 'pendiente', motivo);
+    setActivity(updated);
+    setShowPauseModal(false);
   }
 
   function handleCompleted(updated: Activity) {
@@ -177,6 +191,17 @@ export function ActivityDetail() {
       {showCompleteModal && id && (
         <CompleteActivityModal activityId={id} onClose={() => setShowCompleteModal(false)} onCompleted={handleCompleted} />
       )}
+      {showPauseModal && (
+        <MotivoModal
+          title="Pausar actividad"
+          subtitle={activity.titulo}
+          confirmLabel="Pausar"
+          confirmClassName="bg-amber-500 hover:bg-amber-600"
+          templateContext="motivo_pausa"
+          onClose={() => setShowPauseModal(false)}
+          onConfirm={handlePauseActivity}
+        />
+      )}
 
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-2 flex items-start justify-between gap-4">
@@ -243,13 +268,13 @@ export function ActivityDetail() {
             {activity.resultadoAdjuntos && activity.resultadoAdjuntos.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {activity.resultadoAdjuntos.map((url) => (
-                  <button key={url} type="button" onClick={() => setLightboxUrl(url)} className="shrink-0">
-                    <AuthenticatedImage
-                      src={url}
-                      alt="Evidencia"
-                      className="h-24 w-24 rounded-md border border-gray-200 object-cover transition hover:opacity-80"
-                    />
-                  </button>
+                  <AttachmentThumbnail
+                    key={url}
+                    url={url}
+                    alt="Evidencia"
+                    onImageClick={() => setLightboxUrl(url)}
+                    className="h-24 w-24 rounded-md border border-gray-200 object-cover transition hover:opacity-80"
+                  />
                 ))}
               </div>
             )}
@@ -277,7 +302,7 @@ export function ActivityDetail() {
                 <button
                   key={action.estado}
                   disabled={savingStatus}
-                  onClick={() => handleStatusChange(action.estado)}
+                  onClick={() => (action.estado === 'pendiente' ? setShowPauseModal(true) : handleStatusChange(action.estado))}
                   className={clsx(
                     'rounded-md px-3 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50',
                     action.style,

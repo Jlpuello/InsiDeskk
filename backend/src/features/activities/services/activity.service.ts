@@ -101,12 +101,27 @@ export class ActivityService {
   // exige documentar qué se hizo, con fotos opcionales, así que siempre pasa
   // por completeActivity. El controller ya excluye "completada" del schema
   // de validación de este endpoint.
-  async changeStatus(id: string, estado: ActividadEstado) {
+  async changeStatus(id: string, estado: ActividadEstado, motivo?: string) {
     const existing = await this.getById(id);
     assertCanManageActivity(existing);
 
     if (existing.estado === 'completada' || existing.estado === 'cancelada') {
       throw new AppError('La actividad ya está en un estado final', 422);
+    }
+
+    // Única transición real a "pendiente" desde acá: pausar un trabajo en
+    // curso — exige motivo y queda registrado en el timeline de seguimientos,
+    // mismo criterio que TicketService.changeTicketStatus con "en_espera".
+    if (estado === 'pendiente') {
+      if (existing.estado !== 'en_progreso') {
+        throw new AppError('Solo se puede pausar una actividad que está en progreso', 422);
+      }
+      if (!motivo) throw new AppError('Indicá el motivo de la pausa', 422);
+
+      const usuarioId = getCurrentUserId();
+      if (usuarioId) {
+        await activityFollowupRepository.create({ actividadId: id, usuarioId, contenido: `Actividad pausada: ${motivo}` });
+      }
     }
 
     return activityRepository.update(id, { estado });

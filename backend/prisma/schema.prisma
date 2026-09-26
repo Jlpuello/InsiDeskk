@@ -73,6 +73,36 @@ enum NoteType {
   // Motivo de reapertura (ver TicketService.reopenTicket) — mismo criterio
   // que "cierre", solo la crea el backend.
   reapertura
+  // Motivo de pausa (ver TicketService.changeTicketStatus, transición a
+  // "en_espera") — mismo criterio que "cierre"/"reapertura".
+  pausa
+}
+
+// Dónde puede elegirse una DocumentationTemplate como texto para insertar —
+// ver ese modelo más abajo. Una misma plantilla puede aplicar a más de un
+// contexto (ej. "se reemplazó el switch" sirve tanto para cerrar un ticket
+// como para completar una actividad).
+enum DocumentationTemplateContext {
+  cierre_ticket
+  completar_actividad
+  motivo_pausa
+}
+
+// Textos reutilizables que un admin carga en Configuración → Plantillas para
+// agilizar la documentación de cierres/pausas/actividades — ver
+// TemplatePicker.tsx (frontend) y documentation-templates/ (esta feature).
+// Lista plana a propósito (sin categorización por tipo de ticket): la primera
+// versión de esto no lo necesita, se puede sumar después si hace falta.
+model DocumentationTemplate {
+  id        String                          @id @default(uuid())
+  titulo    String
+  contenido String
+  contextos DocumentationTemplateContext[]
+  activo    Boolean                         @default(true)
+  createdAt DateTime                        @default(now())
+  updatedAt DateTime                        @updatedAt
+
+  @@map("documentation_templates")
 }
 
 // ── Actividades (trabajo proactivo/programado, distinto de Tickets que es

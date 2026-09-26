@@ -39,8 +39,10 @@ export const activityApi = {
   },
 
   // 'completada' no se acepta acá — el backend lo rechaza, ver completeActivity.
-  async changeStatus(id: string, estado: ActivityStatus): Promise<Activity> {
-    const { data } = await apiClient.patch<{ data: Activity }>(`/activities/${id}/estado`, { estado });
+  // motivo es obligatorio del lado del backend solo al pausar
+  // (estado='pendiente' viniendo de 'en_progreso') — ver ActivityController#statusSchema.
+  async changeStatus(id: string, estado: ActivityStatus, motivo?: string): Promise<Activity> {
+    const { data } = await apiClient.patch<{ data: Activity }>(`/activities/${id}/estado`, { estado, motivo });
     return data.data;
   },
 

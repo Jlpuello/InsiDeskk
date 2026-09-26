@@ -120,8 +120,10 @@ describe('notificaciones de actividades', () => {
       activityService.update(activity.id, { descripcion: 'solo texto' }),
     );
     // Acá se espera que NO pase nada — un `wait` fijo (generoso) es lo correcto
-    // para una aserción de ausencia, `waitUntil` no aplica.
-    await wait(3000);
+    // para una aserción de ausencia, `waitUntil` no aplica. La suite ya tiene
+    // varios archivos pegándole a la misma DB/Redis en paralelo, así que el
+    // margen tiene que ser bien holgado.
+    await wait(6000);
 
     const despues = await prisma.notification.findMany({ where: { usuarioId: tecnico.id } });
     expect(despues.length).toBe(antes);

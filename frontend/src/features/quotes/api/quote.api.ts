@@ -1,13 +1,10 @@
 import { apiClient } from '../../../shared/api/client.ts';
+import { downloadAttachment } from '../../../shared/utils/attachments.ts';
 import type { CreateQuoteInput, Quote, QuoteApprover, QuoteEstado, UpdateQuoteInput } from '../types/quote.types.ts';
 
-// El nombre en disco es "{uuid}__{original saneado}" (ver backend:
-// quote-document-upload.middleware.ts) — esto recupera el nombre real para
-// mostrar en la lista, sin el prefijo random.
-export function documentDisplayName(url: string): string {
-  const filename = url.split('/').pop() ?? url;
-  return filename.includes('__') ? filename.split('__').slice(1).join('__') : filename;
-}
+// Reexport por compatibilidad — la implementación real es genérica ahora
+// (también la usan tickets/actividades), ver shared/utils/attachments.ts.
+export { attachmentDisplayName as documentDisplayName } from '../../../shared/utils/attachments.ts';
 
 export const quoteApi = {
   async list(filters?: { empresaId?: string; estado?: QuoteEstado; ticketId?: string }): Promise<Quote[]> {
@@ -92,17 +89,9 @@ export const quoteApi = {
   },
 
   // Descarga el archivo real (con su nombre original, ver
-  // QuoteController.getDocument) armando un <a download> efímero — mismo
-  // patrón que inventoryApi.exportExcel.
-  async downloadDocument(url: string): Promise<void> {
-    const { data } = await apiClient.get(url, { responseType: 'blob' });
-    const blobUrl = URL.createObjectURL(data as Blob);
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = documentDisplayName(url);
-    link.click();
-    URL.revokeObjectURL(blobUrl);
-  },
+  // QuoteController.getDocument) — implementación genérica, ver
+  // shared/utils/attachments.ts.
+  downloadDocument: downloadAttachment,
 
   async downloadPdf(id: string): Promise<void> {
     const { data } = await apiClient.get(`/quotes/${id}/pdf`, { responseType: 'blob' });

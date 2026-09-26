@@ -11,7 +11,7 @@ import { useAuthStore } from '../../auth/store/auth.store.ts';
 import { hasPermission } from '../../../shared/security/permissions.ts';
 import { CloseTicketModal } from './CloseTicketModal.tsx';
 import { ReopenTicketModal } from './ReopenTicketModal.tsx';
-import { AuthenticatedImage } from '../../../shared/components/AuthenticatedImage.tsx';
+import { AttachmentThumbnail } from '../../../shared/components/AttachmentThumbnail.tsx';
 import { ImageLightbox } from '../../../shared/components/ImageLightbox.tsx';
 import { MotivoModal } from '../../../shared/components/MotivoModal.tsx';
 // Única excepción al criterio de imports cruzados de una sola dirección
@@ -138,6 +138,7 @@ export function TicketDetail() {
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPauseModal, setShowPauseModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingStatus, setSavingStatus] = useState(false);
@@ -198,6 +199,16 @@ export function TicketDetail() {
     } finally {
       setSavingStatus(false);
     }
+  }
+
+  // "Pausar" (→ en_espera) es la única transición de flujo que exige motivo
+  // (ver TicketController#statusSchema) — por eso no pasa por
+  // handleStatusChange directo, sino por MotivoModal (showPauseModal, abajo).
+  async function handlePauseTicket(motivo: string) {
+    if (!id) return;
+    const updated = await ticketApi.changeStatus(id, 'en_espera', motivo);
+    setTicket(updated);
+    setShowPauseModal(false);
   }
 
   async function handleSaveAssignee() {
@@ -335,6 +346,17 @@ export function TicketDetail() {
           onConfirm={handleDeleteTicket}
         />
       )}
+      {showPauseModal && (
+        <MotivoModal
+          title="Pausar ticket"
+          subtitle={ticket.titulo}
+          confirmLabel="Pausar"
+          confirmClassName="bg-amber-500 hover:bg-amber-600"
+          templateContext="motivo_pausa"
+          onClose={() => setShowPauseModal(false)}
+          onConfirm={handlePauseTicket}
+        />
+      )}
 
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-2 flex items-start justify-between gap-4">
@@ -440,7 +462,7 @@ export function TicketDetail() {
                 <button
                   key={action.estado}
                   disabled={savingStatus}
-                  onClick={() => handleStatusChange(action.estado)}
+                  onClick={() => (action.estado === 'en_espera' ? setShowPauseModal(true) : handleStatusChange(action.estado))}
                   className={clsx(
                     'rounded-md px-3 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50',
                     action.style,
@@ -498,13 +520,13 @@ export function TicketDetail() {
                 {note.adjuntos && note.adjuntos.length > 0 && (
                   <div className="mb-1 flex flex-wrap gap-2">
                     {note.adjuntos.map((url) => (
-                      <button key={url} type="button" onClick={() => setLightboxUrl(url)} className="shrink-0">
-                        <AuthenticatedImage
-                          src={url}
-                          alt="Evidencia de cierre"
-                          className="h-24 w-24 rounded-md border border-gray-200 object-cover transition hover:opacity-80"
-                        />
-                      </button>
+                      <AttachmentThumbnail
+                        key={url}
+                        url={url}
+                        alt="Evidencia de cierre"
+                        onImageClick={() => setLightboxUrl(url)}
+                        className="h-24 w-24 rounded-md border border-gray-200 object-cover transition hover:opacity-80"
+                      />
                     ))}
                   </div>
                 )}

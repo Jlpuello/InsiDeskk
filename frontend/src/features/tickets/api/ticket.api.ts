@@ -49,8 +49,10 @@ export const ticketApi = {
     return data.data;
   },
 
-  async changeStatus(id: string, estado: TicketStatus): Promise<Ticket> {
-    const { data } = await apiClient.patch<{ data: Ticket }>(`/tickets/${id}/estado`, { estado });
+  // motivo es obligatorio del lado del backend solo cuando estado='en_espera'
+  // (pausar) — ver TicketController#statusSchema.
+  async changeStatus(id: string, estado: TicketStatus, motivo?: string): Promise<Ticket> {
+    const { data } = await apiClient.patch<{ data: Ticket }>(`/tickets/${id}/estado`, { estado, motivo });
     return data.data;
   },
 

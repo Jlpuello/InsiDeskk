@@ -441,7 +441,7 @@ export class TicketService {
   // ya lo excluye del schema de validación de PATCH /:id/estado — cerrar
   // siempre pasa por closeTicketWithResolution (exige documentar la
   // solución), así que solo esa llama a este método con estado='cerrado'.
-  async changeTicketStatus(id: string, estado: TicketStatus, resueltoId?: string) {
+  async changeTicketStatus(id: string, estado: TicketStatus, opts?: { resueltoId?: string; motivo?: string }) {
     const existing = await this.getTicketById(id); // 404 antes que Prisma tire P2025 (record not found) como 500
     this.assertNotLocked(existing);
 
@@ -450,6 +450,13 @@ export class TicketService {
     // evita cierres fantasma sin que nadie haya tocado el problema.
     if (estado === 'cerrado' && existing.estado === 'abierto') {
       throw new AppError('El ticket debe iniciarse (En progreso) antes de poder cerrarse', 422);
+    }
+
+    // Pausar exige indicar por qué — mismo criterio que reabrir/eliminar
+    // (acciones que interrumpen el flujo normal y necesitan quedar
+    // documentadas, no solo el cambio de estado en sí).
+    if (estado === 'en_espera' && !opts?.motivo) {
+      throw new AppError('Indicá el motivo de la pausa', 422);
     }
 
     const now = new Date();
@@ -472,8 +479,26 @@ export class TicketService {
       closedAt: isTerminal ? now : null,
       trabajoIniciadoEn,
       tiempoReal,
-      ...(estado === 'cerrado' && resueltoId && { resuelto: { connect: { id: resueltoId } } }),
+      ...(estado === 'cerrado' && opts?.resueltoId && { resuelto: { connect: { id: opts.resueltoId } } }),
     });
+
+    // Igual que reopenTicket: queda dos veces con el mismo texto — como Note
+    // (se ve en la vista del ticket) y como TicketHistory (registro
+    // estructurado del cambio de estado).
+    if (estado === 'en_espera' && opts?.motivo) {
+      const usuarioId = getCurrentUserId();
+      if (usuarioId) {
+        await noteRepository.create({ ticketId: id, usuarioId, contenido: opts.motivo, tipo: 'pausa' });
+        await ticketHistoryRepository.create({
+          ticketId: id,
+          campoModificado: 'estado',
+          valorAnterior: existing.estado,
+          valorNuevo: estado,
+          usuarioId,
+          razon: opts.motivo,
+        });
+      }
+    }
 
     await cacheService.invalidatePattern(CachePatterns.ticketsForCompany(ticket.empresaId));
     await eventEmitter.emit('ticket.status.changed', {
@@ -511,7 +536,7 @@ export class TicketService {
       adjuntos: input.adjuntos,
     });
 
-    return this.changeTicketStatus(id, 'cerrado', input.usuarioId);
+    return this.changeTicketStatus(id, 'cerrado', { resueltoId: input.usuarioId });
   }
 
   // Única forma de sacar un ticket de "cerrado" — vuelve a "abierto" (hay que

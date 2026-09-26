@@ -90,6 +90,8 @@ const NIVEL_VALUES = [1, 2, 3];
 // solo mueve entre los estados que no requieren esa documentación.
 const statusSchema = Joi.object({
   estado: Joi.string().valid('abierto', 'en_progreso', 'en_espera', 'cancelado').required(),
+  // Solo obligatorio al pausar (→ en_espera) — ver ticket.service.ts#changeTicketStatus.
+  motivo: Joi.string().min(5).max(500).when('estado', { is: 'en_espera', then: Joi.required() }),
 });
 
 const closeTicketSchema = Joi.object({
@@ -172,7 +174,7 @@ export const TicketController = {
     const { error, value } = statusSchema.validate(req.body);
     if (error) throw new AppError(error.message, 422);
 
-    const ticket = await ticketService.changeTicketStatus(req.params.id, value.estado);
+    const ticket = await ticketService.changeTicketStatus(req.params.id, value.estado, { motivo: value.motivo });
     res.status(200).json({ data: sanitizeNestedDevice(ticket) });
   },
 
