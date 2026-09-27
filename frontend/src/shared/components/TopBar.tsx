@@ -10,6 +10,24 @@ interface TopBarProps {
   onOpenMobileNav: () => void;
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Admin',
+  tecnico: 'Técnico',
+  cliente: 'Cliente',
+};
+
+// Iniciales para el avatar — primera letra de hasta las 2 primeras palabras
+// del nombre ("Juan Pérez" → "JP", "Admin" → "A"), nunca más de 2 para que
+// quepan cómodas en el círculo.
+function initialsOf(nombre: string): string {
+  return nombre
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+}
+
 // Barra persistente (a diferencia del header viejo, que solo existía en
 // mobile) — agrupa lo que es "sobre la sesión actual" (notificaciones, quién
 // sos, cerrar sesión), separado de la navegación en sí, que vive solo en el
@@ -50,18 +68,26 @@ export function TopBar({ onOpenMobileNav }: TopBarProps) {
         {user && (
           <>
             <div className="h-6 w-px bg-gray-200" />
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-medium leading-tight text-gray-900">{user.nombre}</p>
-              <p className="text-xs capitalize leading-tight text-gray-500">{user.rol}</p>
+
+            <div className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-1.5 hover:bg-gray-50">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                {initialsOf(user.nombre)}
+              </span>
+              <div className="hidden text-right leading-tight sm:block">
+                <p className="text-sm font-medium text-gray-900">{user.nombre}</p>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                  {ROLE_LABELS[user.rol] ?? user.rol}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                aria-label="Cerrar sesión"
+                title="Cerrar sesión"
+                className="rounded-full p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+              >
+                <LogOut size={17} />
+              </button>
             </div>
-            <button
-              onClick={() => setShowLogoutConfirm(true)}
-              aria-label="Cerrar sesión"
-              title="Cerrar sesión"
-              className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100"
-            >
-              <LogOut size={18} />
-            </button>
           </>
         )}
       </div>
