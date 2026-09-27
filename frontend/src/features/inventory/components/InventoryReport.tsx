@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Printer } from 'lucide-react';
 import { inventoryApi } from '../api/inventory.api.ts';
-import { DocumentHeader, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
+import { DocumentHeader, ReportField as Field, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
 import type { InventoryEquipment, InventoryEquipmentStatus, InventoryEquipmentType } from '../types/inventory.types.ts';
 
 const TIPO_LABELS: Record<InventoryEquipmentType, string> = {
@@ -26,15 +26,6 @@ const ESTADO_TONES: Record<InventoryEquipmentStatus, DocumentStatusTone> = {
   en_reparacion: 'warn',
   dado_de_baja: 'neutral',
 };
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-gray-400">{label}</dt>
-      <dd className="text-sm text-gray-900">{value}</dd>
-    </div>
-  );
-}
 
 // Mismo patrón que TicketReport: vista standalone pensada para imprimir o
 // "Guardar como PDF" desde el navegador, sin depender de generación de PDF en

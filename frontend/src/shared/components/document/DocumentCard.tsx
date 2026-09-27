@@ -16,6 +16,9 @@ export interface DocumentStatus {
 export interface DocumentField {
   label: string;
   value: ReactNode;
+  // Ícono opcional (lucide-react, 14px) — ver los campos armados en
+  // TicketDetail/ActivityDetail para qué ícono corresponde a cada dato.
+  icon?: ReactNode;
 }
 
 const STATUS_STYLES: Record<DocumentStatusTone, string> = {
@@ -78,13 +81,28 @@ export function DocumentCard({ eyebrow, title, reference, status, fields, footer
       <DocumentHeader eyebrow={eyebrow} title={title} reference={reference} status={status} />
 
       {fields && fields.length > 0 && (
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-gray-100 px-6 py-4 sm:grid-cols-4">
-          {fields.map((f, i) => (
-            <div key={i} className="min-w-0">
-              <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">{f.label}</dt>
-              <dd className="mt-0.5 truncate text-sm font-medium text-gray-900">{f.value}</dd>
-            </div>
-          ))}
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-5 border-b border-gray-100 px-6 py-5 sm:grid-cols-4">
+          {fields.map((f, i) => {
+            // "—" es el placeholder que ya usan todos los llamadores para un
+            // dato ausente (ver TicketDetail/ActivityDetail) — atenuarlo evita
+            // que un campo vacío compita visualmente con uno que sí tiene dato.
+            const isEmpty = f.value === '—';
+            return (
+              <div key={i} className="flex min-w-0 items-start gap-2.5">
+                {f.icon && (
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-400">
+                    {f.icon}
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <dt className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">{f.label}</dt>
+                  <dd className={clsx('mt-0.5 truncate text-sm font-medium', isEmpty ? 'text-gray-300' : 'text-gray-900')}>
+                    {f.value}
+                  </dd>
+                </div>
+              </div>
+            );
+          })}
         </dl>
       )}
 
@@ -139,6 +157,20 @@ export function DocumentSignature({
         <p className="font-mono text-[11px] text-gray-400">{date}</p>
       </div>
       {action && <div className="shrink-0">{action}</div>}
+    </div>
+  );
+}
+
+// Par label/valor para grillas de metadatos más grandes que las 4 columnas
+// de DocumentCard (TicketReport/DeviceReport/InventoryReport, ~11-16 campos
+// — demasiados para el tratamiento con ícono de arriba) — mismo criterio de
+// atenuar "—" que esa grilla, antes copiado igual en los 3 archivos.
+export function ReportField({ label, value }: { label: string; value: string }) {
+  const isEmpty = value === '—';
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-gray-400">{label}</dt>
+      <dd className={clsx('text-sm', isEmpty ? 'text-gray-300' : 'text-gray-900')}>{value}</dd>
     </div>
   );
 }

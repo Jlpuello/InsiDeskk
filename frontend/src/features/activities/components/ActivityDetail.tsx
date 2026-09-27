@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import clsx from 'clsx';
-import { FileDown, Send } from 'lucide-react';
+import { Building2, CalendarCheck, FileDown, Monitor, Send, Tag } from 'lucide-react';
 import { activityApi } from '../api/activity.api.ts';
 import { CreateActaModal } from './CreateActaModal.tsx';
 import { CompleteActivityModal } from './CompleteActivityModal.tsx';
@@ -334,12 +334,13 @@ export function ActivityDetail() {
           reference={`ACT-${activity.acta.id.slice(0, 8).toUpperCase()}`}
           status={{ label: 'Firmada', tone: 'good' }}
           fields={[
-            { label: 'Empresa', value: activity.empresa?.nombre ?? '—' },
-            { label: 'Tipo', value: TYPE_LABELS[activity.tipo] },
-            { label: 'Dispositivo', value: activity.dispositivo?.nombre ?? '—' },
+            { label: 'Empresa', value: activity.empresa?.nombre ?? '—', icon: <Building2 size={14} /> },
+            { label: 'Tipo', value: TYPE_LABELS[activity.tipo], icon: <Tag size={14} /> },
+            { label: 'Dispositivo', value: activity.dispositivo?.nombre ?? '—', icon: <Monitor size={14} /> },
             {
               label: 'Completada',
               value: activity.fechaCompletada ? new Date(activity.fechaCompletada).toLocaleDateString('es-ES') : '—',
+              icon: <CalendarCheck size={14} />,
             },
           ]}
           footerLeft={activity.acta.enviadoEn ? `Enviada a ${activity.acta.enviadoA}` : undefined}

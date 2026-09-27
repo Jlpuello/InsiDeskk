@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Printer } from 'lucide-react';
 import { deviceApi } from '../api/device.api.ts';
-import { DocumentHeader, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
+import { DocumentHeader, ReportField as Field, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import { hasPermission } from '../../../shared/security/permissions.ts';
 import type { Device } from '../types/device.types.ts';
@@ -18,15 +18,6 @@ const STATUS_TONES: Record<string, DocumentStatusTone> = {
   offline: 'warn',
   inactivo: 'neutral',
 };
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-gray-400">{label}</dt>
-      <dd className="text-sm text-gray-900">{value}</dd>
-    </div>
-  );
-}
 
 // Mismo patrón que TicketReport/InventoryReport: vista standalone pensada
 // para imprimir o "Guardar como PDF" desde el navegador. A diferencia del

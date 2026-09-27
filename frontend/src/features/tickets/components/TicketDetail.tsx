@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import clsx from 'clsx';
-import { FileDown, Trash2, X } from 'lucide-react';
+import { Building2, Clock, FileDown, Tag, Trash2, User, X } from 'lucide-react';
 import { ticketApi } from '../api/ticket.api.ts';
 import { getSlaBadge } from '../utils/sla.ts';
 import { formatDuration } from '../utils/time.ts';
@@ -500,13 +500,18 @@ export function TicketDetail() {
           reference={`TCK-${ticket.id.slice(0, 8).toUpperCase()}`}
           status={{ label: 'Resuelto', tone: 'good' }}
           fields={[
-            { label: 'Empresa', value: ticket.empresa?.nombre ?? '—' },
-            { label: 'Técnico', value: closureNote.usuario?.nombre ?? ticket.usuarioAsignado?.nombre ?? '—' },
+            { label: 'Empresa', value: ticket.empresa?.nombre ?? '—', icon: <Building2 size={14} /> },
+            {
+              label: 'Técnico',
+              value: closureNote.usuario?.nombre ?? ticket.usuarioAsignado?.nombre ?? '—',
+              icon: <User size={14} />,
+            },
             {
               label: 'Categoría',
               value: ticket.categoria ? `${ticket.categoria.nombre}${ticket.subcategoria ? ` · ${ticket.subcategoria.nombre}` : ''}` : '—',
+              icon: <Tag size={14} />,
             },
-            { label: 'Tiempo trabajado', value: formatDuration(ticket.tiempoReal) },
+            { label: 'Tiempo trabajado', value: formatDuration(ticket.tiempoReal), icon: <Clock size={14} /> },
           ]}
           footerLeft={`Cerrado por ${closureNote.usuario?.nombre ?? 'Usuario'}`}
           footerRight={new Date(closureNote.createdAt).toLocaleString('es-ES')}

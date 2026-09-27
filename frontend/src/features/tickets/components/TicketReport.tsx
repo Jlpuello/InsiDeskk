@@ -5,7 +5,7 @@ import { ticketApi } from '../api/ticket.api.ts';
 import { getSlaBadge } from '../utils/sla.ts';
 import { formatDuration } from '../utils/time.ts';
 import { AuthenticatedImage } from '../../../shared/components/AuthenticatedImage.tsx';
-import { DocumentHeader, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
+import { DocumentHeader, ReportField as Field, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import { hasPermission } from '../../../shared/security/permissions.ts';
 import type { NoteType, Ticket, TicketNote } from '../types/ticket.types.ts';
@@ -35,15 +35,6 @@ const NOTE_TYPE_LABELS: Record<NoteType, string> = {
   cierre: 'Cierre del ticket',
   reapertura: 'Reapertura',
 };
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-gray-400">{label}</dt>
-      <dd className="text-sm text-gray-900">{value}</dd>
-    </div>
-  );
-}
 
 // Vista standalone (fuera de AppLayout, sin sidebar) pensada para imprimir o
 // "Guardar como PDF" desde el diálogo de impresión del navegador — evita
