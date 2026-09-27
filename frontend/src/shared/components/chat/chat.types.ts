@@ -1,5 +1,12 @@
 import type { ReactNode } from 'react';
 
+// Prefijos que distinguen las dos fuentes (Conversation externa / TeamChannel)
+// dentro de un mismo id de ChatConversation — compartidos entre MessagesPage
+// (la bandeja completa) y MessagesIndicator (la vista previa en el TopBar)
+// para que un id armado en uno se pueda resolver en el otro.
+export const EXT_PREFIX = 'ext:';
+export const TEAM_PREFIX = 'team:';
+
 // Modelo genérico, agnóstico del dominio — inspirado en la forma de
 // @mui/x-chat (adapter + conversations/messages desacoplados de la UI), pero
 // sin esa dependencia (está en alpha y trae Material UI entero, dos cosas

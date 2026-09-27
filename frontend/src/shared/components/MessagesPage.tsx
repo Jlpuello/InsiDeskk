@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import clsx from 'clsx';
 import { Download, Hash, MessageCircle, MessageSquarePlus, Plus } from 'lucide-react';
@@ -9,7 +10,7 @@ import { useAuthStore } from '../../features/auth/store/auth.store.ts';
 import { connectStaffSocket, connectTeamSocket } from '../realtime/socket.client.ts';
 import { Modal } from './Modal.tsx';
 import { ChatBox, type ChatFilterOption } from './chat/ChatBox.tsx';
-import type { ChatAdapter, ChatConversation, ChatMessage } from './chat/chat.types.ts';
+import { EXT_PREFIX, TEAM_PREFIX, type ChatAdapter, type ChatConversation, type ChatMessage } from './chat/chat.types.ts';
 import type {
   ConversationMessage,
   ConversationMessageEvent,
@@ -20,12 +21,6 @@ import type { TeamChannelSummary, TeamMessage, TeamMessageEvent } from '../../fe
 import type { UserSummary } from '../../features/users/types/user.types.ts';
 
 const ESTADO_LABELS: Record<ConversationStatus, string> = { abierta: 'Abierta', cerrada: 'Cerrada' };
-
-// IDs de las dos fuentes de datos (Conversation externa / TeamChannel) se
-// combinan en una sola lista — se prefijan para que nunca choquen entre sí
-// y para saber, con solo mirar el id, a qué API hay que pegarle.
-const EXT_PREFIX = 'ext:';
-const TEAM_PREFIX = 'team:';
 
 function toChatMessageExternal(m: ConversationMessage): ChatMessage {
   return {
@@ -82,6 +77,7 @@ function teamEventToChatMessage(payload: TeamMessageEvent, currentUserId?: strin
 // resuelve siempre contra la lista completa, no la filtrada).
 export function MessagesPage() {
   const currentUserId = useAuthStore((state) => state.user?.id);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [externalConversations, setExternalConversations] = useState<ConversationSummary[]>([]);
   const [teamChannels, setTeamChannels] = useState<TeamChannelSummary[]>([]);
@@ -150,6 +146,25 @@ export function MessagesPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId]);
+
+  // Deep link desde el preview de MessagesIndicator (?c=ext:xxx / team:xxx) —
+  // recién se puede resolver una vez que las listas terminaron de cargar, y
+  // se limpia de la URL apenas se consume para que un refresh no reabra la
+  // misma conversación sola ni un back del navegador quede pegado a ella.
+  useEffect(() => {
+    if (loadingList) return;
+    const target = searchParams.get('c');
+    if (!target) return;
+    selectConversation(target);
+    setSearchParams(
+      (prev) => {
+        prev.delete('c');
+        return prev;
+      },
+      { replace: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingList]);
 
   function findExternal(id: string): ConversationSummary | undefined {
     return externalConversations.find((c) => EXT_PREFIX + c.id === id);
