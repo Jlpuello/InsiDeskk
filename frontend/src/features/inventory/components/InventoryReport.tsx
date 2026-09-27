@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Printer } from 'lucide-react';
 import { inventoryApi } from '../api/inventory.api.ts';
+import { DocumentHeader, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
 import type { InventoryEquipment, InventoryEquipmentStatus, InventoryEquipmentType } from '../types/inventory.types.ts';
 
 const TIPO_LABELS: Record<InventoryEquipmentType, string> = {
@@ -18,6 +19,12 @@ const ESTADO_LABELS: Record<InventoryEquipmentStatus, string> = {
   activo: 'Activo',
   en_reparacion: 'En reparación',
   dado_de_baja: 'Dado de baja',
+};
+
+const ESTADO_TONES: Record<InventoryEquipmentStatus, DocumentStatusTone> = {
+  activo: 'good',
+  en_reparacion: 'warn',
+  dado_de_baja: 'neutral',
 };
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -79,18 +86,20 @@ export function InventoryReport() {
         </button>
       </div>
 
-      <div className="mb-6 border-b border-gray-200 pb-4">
-        <p className="text-xs uppercase tracking-wide text-gray-400">Ficha de inventario</p>
-        <h1 className="text-xl font-semibold text-gray-900">{item.nombre}</h1>
-        <p className="mt-1 text-xs text-gray-400">
-          {TIPO_LABELS[item.tipo]} · Generado el {new Date().toLocaleString('es-ES')}
-        </p>
-      </div>
+      <DocumentHeader
+        className="mb-6 rounded-xl"
+        eyebrow="Ficha de inventario"
+        title={item.nombre}
+        reference={`INV-${item.id.slice(0, 8).toUpperCase()}`}
+        status={{ label: ESTADO_LABELS[item.estado], tone: ESTADO_TONES[item.estado] }}
+      />
+      <p className="-mt-4 mb-6 text-xs text-gray-400">
+        {TIPO_LABELS[item.tipo]} · Generado el {new Date().toLocaleString('es-ES')}
+      </p>
 
       <dl className="mb-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
         <Field label="Empresa" value={item.empresa?.nombre ?? '—'} />
         <Field label="Tipo" value={TIPO_LABELS[item.tipo]} />
-        <Field label="Estado" value={ESTADO_LABELS[item.estado]} />
         <Field label="Marca" value={item.marca ?? '—'} />
         <Field label="Modelo" value={item.modelo ?? '—'} />
         <Field label="N° de serie" value={item.numeroSerie ?? '—'} />

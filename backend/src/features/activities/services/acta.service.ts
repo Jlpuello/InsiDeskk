@@ -58,6 +58,7 @@ export class ActaService {
 
     await generateActaPdf(
       {
+        actaId: acta.id,
         actividadTitulo: actividad.titulo,
         actividadDescripcion: actividad.descripcion,
         empresaNombre: actividad.empresa.nombre,

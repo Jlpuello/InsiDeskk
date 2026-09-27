@@ -12,6 +12,7 @@ import { hasPermission } from '../../../shared/security/permissions.ts';
 import { CloseTicketModal } from './CloseTicketModal.tsx';
 import { ReopenTicketModal } from './ReopenTicketModal.tsx';
 import { AttachmentThumbnail } from '../../../shared/components/AttachmentThumbnail.tsx';
+import { DocumentCard, DocumentLabel, DocumentSection } from '../../../shared/components/document/DocumentCard.tsx';
 import { ImageLightbox } from '../../../shared/components/ImageLightbox.tsx';
 import { MotivoModal } from '../../../shared/components/MotivoModal.tsx';
 // Única excepción al criterio de imports cruzados de una sola dirección
@@ -291,6 +292,12 @@ export function TicketDetail() {
   const canClose = canManageWorkflow && CAN_CLOSE_FROM.includes(ticket.estado);
   const assigneeDirty = assigneeDraft !== (ticket.usuarioAsignadoId ?? '');
 
+  // La nota de cierre más reciente (puede haber más de una si el ticket se
+  // reabrió y se volvió a cerrar) — se destaca arriba con DocumentCard sin
+  // sacarla de la lista general de notas, donde sigue apareciendo igual que
+  // siempre para no perder el historial completo.
+  const closureNote = [...notes].reverse().find((n) => n.tipo === 'cierre');
+
   return (
     <div className="mx-auto max-w-3xl p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -484,6 +491,45 @@ export function TicketDetail() {
           </div>
         )}
       </div>
+
+      {ticket.estado === 'cerrado' && closureNote && (
+        <DocumentCard
+          className="mb-6"
+          eyebrow="Cierre de ticket"
+          title={ticket.titulo}
+          reference={`TCK-${ticket.id.slice(0, 8).toUpperCase()}`}
+          status={{ label: 'Resuelto', tone: 'good' }}
+          fields={[
+            { label: 'Empresa', value: ticket.empresa?.nombre ?? '—' },
+            { label: 'Técnico', value: closureNote.usuario?.nombre ?? ticket.usuarioAsignado?.nombre ?? '—' },
+            {
+              label: 'Categoría',
+              value: ticket.categoria ? `${ticket.categoria.nombre}${ticket.subcategoria ? ` · ${ticket.subcategoria.nombre}` : ''}` : '—',
+            },
+            { label: 'Tiempo trabajado', value: formatDuration(ticket.tiempoReal) },
+          ]}
+          footerLeft={`Cerrado por ${closureNote.usuario?.nombre ?? 'Usuario'}`}
+          footerRight={new Date(closureNote.createdAt).toLocaleString('es-ES')}
+        >
+          <DocumentSection label="Resolución">{closureNote.contenido}</DocumentSection>
+          {closureNote.adjuntos && closureNote.adjuntos.length > 0 && (
+            <div>
+              <DocumentLabel>Evidencia</DocumentLabel>
+              <div className="flex flex-wrap gap-2">
+                {closureNote.adjuntos.map((url) => (
+                  <AttachmentThumbnail
+                    key={url}
+                    url={url}
+                    alt="Evidencia de cierre"
+                    onImageClick={() => setLightboxUrl(url)}
+                    className="h-20 w-20 rounded-md border border-gray-200 object-cover transition hover:opacity-80"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </DocumentCard>
+      )}
 
       <QuoteSection ticketId={ticket.id} empresaId={ticket.empresaId} />
 

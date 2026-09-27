@@ -9,6 +9,7 @@ import { AuthenticatedImage } from '../../../shared/components/AuthenticatedImag
 import { AttachmentThumbnail } from '../../../shared/components/AttachmentThumbnail.tsx';
 import { ImageLightbox } from '../../../shared/components/ImageLightbox.tsx';
 import { MotivoModal } from '../../../shared/components/MotivoModal.tsx';
+import { DocumentCard, DocumentSection, DocumentSignature } from '../../../shared/components/document/DocumentCard.tsx';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import type { Activity, ActivityFollowup, ActivityStatus, ActivityType } from '../types/activity.types.ts';
 
@@ -326,38 +327,50 @@ export function ActivityDetail() {
       </div>
 
       {activity.acta && (
-        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold text-gray-900">Acta de entrega</h2>
-          <p className="mb-2 text-sm text-gray-800">{activity.acta.contenido}</p>
-          <div className="mb-3 flex items-center gap-3">
+        <DocumentCard
+          className="mb-6"
+          eyebrow="Acta de entrega"
+          title={activity.titulo}
+          reference={`ACT-${activity.acta.id.slice(0, 8).toUpperCase()}`}
+          status={{ label: 'Firmada', tone: 'good' }}
+          fields={[
+            { label: 'Empresa', value: activity.empresa?.nombre ?? '—' },
+            { label: 'Tipo', value: TYPE_LABELS[activity.tipo] },
+            { label: 'Dispositivo', value: activity.dispositivo?.nombre ?? '—' },
+            {
+              label: 'Completada',
+              value: activity.fechaCompletada ? new Date(activity.fechaCompletada).toLocaleDateString('es-ES') : '—',
+            },
+          ]}
+          footerLeft={activity.acta.enviadoEn ? `Enviada a ${activity.acta.enviadoA}` : undefined}
+          footerRight={activity.acta.enviadoEn ? new Date(activity.acta.enviadoEn).toLocaleString('es-ES') : undefined}
+        >
+          <DocumentSection label="Trabajo realizado">{activity.acta.contenido}</DocumentSection>
+
+          <DocumentSignature
+            name={activity.acta.firmaNombre}
+            role="Firmó la entrega"
+            date={new Date(activity.acta.firmadoEn).toLocaleString('es-ES')}
+            action={
+              <button
+                type="button"
+                onClick={() => activityApi.downloadActaPdf(activity.id)}
+                className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800"
+              >
+                <FileDown size={14} />
+                Descargar PDF
+              </button>
+            }
+          >
             <AuthenticatedImage
               src={activity.acta.firmaImagen}
               alt="Firma"
-              className="h-16 rounded-md border border-gray-200 bg-white"
+              className="h-14 w-32 rounded-md border border-gray-200 bg-white object-contain"
             />
-            <div className="text-xs text-gray-500">
-              <p className="font-medium text-gray-700">{activity.acta.firmaNombre}</p>
-              <p>{new Date(activity.acta.firmadoEn).toLocaleString('es-ES')}</p>
-            </div>
-          </div>
-
-          {activity.acta.enviadoEn ? (
-            <p className="text-xs text-green-700">
-              Enviada a {activity.acta.enviadoA} el {new Date(activity.acta.enviadoEn).toLocaleString('es-ES')}
-            </p>
-          ) : null}
-
-          <button
-            type="button"
-            onClick={() => activityApi.downloadActaPdf(activity.id)}
-            className="mt-2 flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800"
-          >
-            <FileDown size={14} />
-            Descargar PDF
-          </button>
+          </DocumentSignature>
 
           {canManage && (
-            <form onSubmit={handleSendActa} className="mt-3 flex gap-2">
+            <form onSubmit={handleSendActa} className="flex gap-2">
               <input
                 type="email"
                 value={sendTo}
@@ -376,7 +389,7 @@ export function ActivityDetail() {
               </button>
             </form>
           )}
-        </div>
+        </DocumentCard>
       )}
 
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">

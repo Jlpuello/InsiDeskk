@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import PDFDocument from 'pdfkit';
+import { drawDocumentFooter, drawDocumentHeader, drawHighlightBlock, drawMetaGrid, drawSignatureLedger } from '../../../shared/pdf/document-pdf.js';
 
 export interface ActaPdfData {
+  actaId: string;
   actividadTitulo: string;
   actividadDescripcion?: string | null;
   empresaNombre: string;
@@ -26,50 +28,32 @@ export async function generateActaPdf(data: ActaPdfData, outputPath: string): Pr
     const stream = fs.createWriteStream(outputPath);
     doc.pipe(stream);
 
-    doc.fontSize(18).text('Acta de Entrega', { align: 'center' });
-    doc.moveDown(0.5);
-    doc
-      .fontSize(9)
-      .fillColor('#666666')
-      .text(`Generado el ${new Date().toLocaleString('es-ES')}`, { align: 'center' });
-    doc.moveDown(2);
+    drawDocumentHeader(doc, {
+      eyebrow: 'Acta de entrega',
+      title: data.actividadTitulo,
+      ref: `ACT-${data.actaId.slice(0, 8).toUpperCase()}`,
+      status: { label: 'Firmada', tone: 'good' },
+    });
 
-    doc.fillColor('#000000').fontSize(11);
-    doc.text(`Empresa: ${data.empresaNombre}`);
-    doc.text(`Actividad: ${data.actividadTitulo}`);
-    doc.text(`Tipo: ${data.tipo}`);
-    if (data.fechaCompletada) {
-      doc.text(`Completada: ${data.fechaCompletada.toLocaleString('es-ES')}`);
-    }
-    doc.moveDown();
+    drawMetaGrid(doc, [
+      { label: 'Empresa', value: data.empresaNombre },
+      { label: 'Tipo', value: data.tipo },
+      ...(data.fechaCompletada ? [{ label: 'Completada', value: data.fechaCompletada.toLocaleString('es-ES') }] : []),
+    ]);
 
     if (data.actividadDescripcion) {
-      doc.fontSize(11).text('Descripción', { underline: true });
-      doc.fontSize(11).text(data.actividadDescripcion);
-      doc.moveDown();
+      drawHighlightBlock(doc, 'Descripción', data.actividadDescripcion);
     }
+    drawHighlightBlock(doc, 'Trabajo realizado', data.contenido);
 
-    doc.fontSize(11).text('Resumen del trabajo realizado', { underline: true });
-    doc.fontSize(11).text(data.contenido);
-    doc.moveDown(2);
+    drawSignatureLedger(doc, {
+      imagePath: data.firmaImagenPath,
+      name: data.firmaNombre,
+      role: 'Firmó la entrega',
+      date: data.firmadoEn.toLocaleString('es-ES'),
+    });
 
-    doc.fontSize(11).text('Firma', { underline: true });
-    doc.moveDown(0.5);
-    try {
-      doc.image(data.firmaImagenPath, { width: 200 });
-    } catch {
-      doc.fontSize(9).fillColor('#999999').text('(no se pudo incrustar la imagen de la firma)');
-    }
-    doc
-      .fontSize(10)
-      .fillColor('#000000')
-      .text(`${data.firmaNombre} — ${data.firmadoEn.toLocaleString('es-ES')}`);
-    doc.moveDown(2);
-
-    doc
-      .fontSize(9)
-      .fillColor('#999999')
-      .text(`Documento generado por ${data.creadoPorNombre}`);
+    drawDocumentFooter(doc, `Documento generado por ${data.creadoPorNombre}`, `Generado ${new Date().toLocaleDateString('es-ES')}`);
 
     doc.end();
 

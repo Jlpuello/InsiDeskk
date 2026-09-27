@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Printer } from 'lucide-react';
 import { deviceApi } from '../api/device.api.ts';
+import { DocumentHeader, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import { hasPermission } from '../../../shared/security/permissions.ts';
 import type { Device } from '../types/device.types.ts';
@@ -10,6 +11,12 @@ const STATUS_LABELS: Record<string, string> = {
   online: 'En línea',
   offline: 'Fuera de línea',
   inactivo: 'Inactivo',
+};
+
+const STATUS_TONES: Record<string, DocumentStatusTone> = {
+  online: 'good',
+  offline: 'warn',
+  inactivo: 'neutral',
 };
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -74,16 +81,18 @@ export function DeviceReport() {
         </button>
       </div>
 
-      <div className="mb-6 border-b border-gray-200 pb-4">
-        <p className="text-xs uppercase tracking-wide text-gray-400">Ficha de inventario</p>
-        <h1 className="text-xl font-semibold text-gray-900">{device.nombre}</h1>
-        <p className="mt-1 text-xs text-gray-400">PC con agente · Generado el {new Date().toLocaleString('es-ES')}</p>
-      </div>
+      <DocumentHeader
+        className="mb-6 rounded-xl"
+        eyebrow="Ficha de inventario"
+        title={device.nombre}
+        reference={`PC-${device.id.slice(0, 8).toUpperCase()}`}
+        status={{ label: STATUS_LABELS[device.estado] ?? device.estado, tone: STATUS_TONES[device.estado] ?? 'neutral' }}
+      />
+      <p className="-mt-4 mb-6 text-xs text-gray-400">PC con agente · Generado el {new Date().toLocaleString('es-ES')}</p>
 
       <dl className="mb-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
         <Field label="Empresa" value={device.empresa?.nombre ?? '—'} />
         <Field label="Hostname" value={device.hostname ?? '—'} />
-        <Field label="Estado" value={STATUS_LABELS[device.estado] ?? device.estado} />
         <Field label="Sistema operativo" value={[device.so, device.versionSo].filter(Boolean).join(' ') || '—'} />
         <Field label="IP local" value={device.ipLocal ?? '—'} />
         <Field label="Grupo" value={device.remotelyGroupName ?? '—'} />

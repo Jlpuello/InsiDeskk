@@ -199,6 +199,7 @@ export class QuoteService {
 
     await generateQuotePdf(
       {
+        quoteId: quote.id,
         ticketTitulo: ticket.titulo,
         empresaNombre: quote.empresa.nombre,
         razon: quote.razon,

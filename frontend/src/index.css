@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Sin esto, Chrome descarta fondos/colores de texto al imprimir o "Guardar
+   como PDF" salvo que el usuario tilde "Gráficos de fondo" a mano — rompe los
+   informes imprimibles (TicketReport, DeviceReport, InventoryReport), donde
+   el header oscuro y las badges de estado son parte del contenido, no
+   decoración descartable. */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

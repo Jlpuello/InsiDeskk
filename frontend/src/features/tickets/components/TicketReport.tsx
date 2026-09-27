@@ -5,9 +5,19 @@ import { ticketApi } from '../api/ticket.api.ts';
 import { getSlaBadge } from '../utils/sla.ts';
 import { formatDuration } from '../utils/time.ts';
 import { AuthenticatedImage } from '../../../shared/components/AuthenticatedImage.tsx';
+import { DocumentHeader, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import { hasPermission } from '../../../shared/security/permissions.ts';
 import type { NoteType, Ticket, TicketNote } from '../types/ticket.types.ts';
+
+const STATUS_TONES: Record<string, DocumentStatusTone> = {
+  abierto: 'neutral',
+  en_progreso: 'neutral',
+  en_espera: 'warn',
+  esperando_aprobacion: 'warn',
+  cerrado: 'good',
+  cancelado: 'neutral',
+};
 
 const STATUS_LABELS: Record<string, string> = {
   abierto: 'Abierto',
@@ -101,17 +111,17 @@ export function TicketReport() {
         </button>
       </div>
 
-      <div className="mb-6 border-b border-gray-200 pb-4">
-        <p className="text-xs uppercase tracking-wide text-gray-400">Informe de ticket</p>
-        <h1 className="text-xl font-semibold text-gray-900">{ticket.titulo}</h1>
-        <p className="mt-1 text-xs text-gray-400">
-          ID {ticket.id} · Generado el {new Date().toLocaleString('es-ES')}
-        </p>
-      </div>
+      <DocumentHeader
+        className="mb-6 rounded-xl"
+        eyebrow="Informe de ticket"
+        title={ticket.titulo}
+        reference={`TCK-${ticket.id.slice(0, 8).toUpperCase()}`}
+        status={{ label: STATUS_LABELS[ticket.estado], tone: STATUS_TONES[ticket.estado] ?? 'neutral' }}
+      />
+      <p className="-mt-4 mb-6 text-xs text-gray-400">Generado el {new Date().toLocaleString('es-ES')}</p>
 
       <dl className="mb-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
         <Field label="Empresa" value={ticket.empresa?.nombre ?? '—'} />
-        <Field label="Estado" value={STATUS_LABELS[ticket.estado]} />
         <Field
           label="Reportado por"
           value={
