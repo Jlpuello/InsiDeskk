@@ -165,11 +165,14 @@ export function DocumentSignature({
 // de DocumentCard (TicketReport/DeviceReport/InventoryReport, ~11-16 campos
 // — demasiados para el tratamiento con ícono de arriba) — mismo criterio de
 // atenuar "—" que esa grilla, antes copiado igual en los 3 archivos.
-export function ReportField({ label, value }: { label: string; value: string }) {
+export function ReportField({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
   const isEmpty = value === '—';
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-gray-400">{label}</dt>
+      <dt className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-gray-400">
+        {icon}
+        {label}
+      </dt>
       <dd className={clsx('text-sm', isEmpty ? 'text-gray-300' : 'text-gray-900')}>{value}</dd>
     </div>
   );

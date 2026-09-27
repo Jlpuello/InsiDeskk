@@ -1,7 +1,7 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import clsx from 'clsx';
-import { Building2, Clock, FileDown, Tag, Trash2, User, X } from 'lucide-react';
+import { AlertCircle, Building2, Clock, FileDown, Flag, Tag, Tags, Timer, Trash2, User, UserCheck, X } from 'lucide-react';
 import { ticketApi } from '../api/ticket.api.ts';
 import { getSlaBadge } from '../utils/sla.ts';
 import { formatDuration } from '../utils/time.ts';
@@ -81,11 +81,13 @@ const CAN_CLOSE_FROM: TicketStatus[] = ['en_progreso', 'en_espera'];
 
 function SlaBadge({
   label,
+  icon,
   dueAt,
   completedAt,
   paused,
 }: {
   label: string;
+  icon?: ReactNode;
   dueAt?: string | null;
   completedAt?: string | null;
   // Mientras el ticket espera aprobación de una cotización, el reloj no
@@ -96,7 +98,10 @@ function SlaBadge({
   if (paused) {
     return (
       <div>
-        <dt className="text-gray-400">{label}</dt>
+        <dt className="flex items-center gap-1.5 text-gray-400">
+          {icon}
+          {label}
+        </dt>
         <dd>
           <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800">
             Pausado (esperando aprobación)
@@ -110,7 +115,10 @@ function SlaBadge({
   if (!badge) return null;
   return (
     <div>
-      <dt className="text-gray-400">{label}</dt>
+      <dt className="flex items-center gap-1.5 text-gray-400">
+        {icon}
+        {label}
+      </dt>
       <dd>
         <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', badge.className)}>{badge.label}</span>
       </dd>
@@ -376,15 +384,24 @@ export function TicketDetail() {
 
         <dl className="mb-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-4">
           <div>
-            <dt className="text-gray-400">Prioridad</dt>
+            <dt className="flex items-center gap-1.5 text-gray-400">
+              <Flag size={12} />
+              Prioridad
+            </dt>
             <dd className="capitalize text-gray-800">{ticket.prioridad}</dd>
           </div>
           <div>
-            <dt className="text-gray-400">Criticidad</dt>
+            <dt className="flex items-center gap-1.5 text-gray-400">
+              <AlertCircle size={12} />
+              Criticidad
+            </dt>
             <dd className="capitalize text-gray-800">{ticket.criticidad}</dd>
           </div>
           <div>
-            <dt className="text-gray-400">Reportado por</dt>
+            <dt className="flex items-center gap-1.5 text-gray-400">
+              <User size={12} />
+              Reportado por
+            </dt>
             <dd className="text-gray-800">
               {ticket.usuarioReporter?.nombre ?? ticket.reporterNombre ?? '—'}
               {!ticket.usuarioReporterId && (
@@ -400,34 +417,48 @@ export function TicketDetail() {
             </dd>
           </div>
           <div>
-            <dt className="text-gray-400">Categoría</dt>
-            <dd className="text-gray-800">{ticket.categoria?.nombre ?? '—'}</dd>
+            <dt className="flex items-center gap-1.5 text-gray-400">
+              <Tag size={12} />
+              Categoría
+            </dt>
+            <dd className={ticket.categoria ? 'text-gray-800' : 'text-gray-300'}>{ticket.categoria?.nombre ?? '—'}</dd>
           </div>
           <div>
-            <dt className="text-gray-400">Subcategoría</dt>
-            <dd className="text-gray-800">{ticket.subcategoria?.nombre ?? '—'}</dd>
+            <dt className="flex items-center gap-1.5 text-gray-400">
+              <Tags size={12} />
+              Subcategoría
+            </dt>
+            <dd className={ticket.subcategoria ? 'text-gray-800' : 'text-gray-300'}>{ticket.subcategoria?.nombre ?? '—'}</dd>
           </div>
           <SlaBadge
             label="SLA respuesta"
+            icon={<Timer size={12} />}
             dueAt={ticket.slaRespuestaVence}
             completedAt={ticket.primeraRespuestaEn}
             paused={!!ticket.slaPausadoEn && !ticket.primeraRespuestaEn}
           />
           <SlaBadge
             label="SLA resolución"
+            icon={<Timer size={12} />}
             dueAt={ticket.slaResolucionVence}
             completedAt={ticket.estado === 'cerrado' ? ticket.closedAt : null}
             paused={!!ticket.slaPausadoEn}
           />
           <div>
-            <dt className="text-gray-400">Tiempo trabajado</dt>
+            <dt className="flex items-center gap-1.5 text-gray-400">
+              <Clock size={12} />
+              Tiempo trabajado
+            </dt>
             <dd className="text-gray-800">
               {formatDuration(ticket.tiempoReal)}
               {ticket.trabajoIniciadoEn && <span className="ml-1 text-xs text-amber-600">(en curso)</span>}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-400">Asignado a</dt>
+            <dt className="flex items-center gap-1.5 text-gray-400">
+              <UserCheck size={12} />
+              Asignado a
+            </dt>
             <dd className="text-gray-800">
               {canManageWorkflow && !isLocked ? (
                 <div className="mt-0.5 flex items-center gap-1.5">
@@ -454,8 +485,10 @@ export function TicketDetail() {
                     </button>
                   )}
                 </div>
+              ) : ticket.usuarioAsignado ? (
+                ticket.usuarioAsignado.nombre
               ) : (
-                (ticket.usuarioAsignado?.nombre ?? '—')
+                <span className="text-gray-300">—</span>
               )}
             </dd>
           </div>

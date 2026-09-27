@@ -1,6 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Printer } from 'lucide-react';
+import {
+  AlertCircle,
+  Building2,
+  Calendar,
+  CalendarCheck,
+  CheckCircle2,
+  Clock,
+  Flag,
+  Hourglass,
+  Monitor,
+  Printer,
+  Tag,
+  Tags,
+  Timer,
+  User,
+  UserCheck,
+} from 'lucide-react';
 import { ticketApi } from '../api/ticket.api.ts';
 import { getSlaBadge } from '../utils/sla.ts';
 import { formatDuration } from '../utils/time.ts';
@@ -112,27 +128,32 @@ export function TicketReport() {
       <p className="-mt-4 mb-6 text-xs text-gray-400">Generado el {new Date().toLocaleString('es-ES')}</p>
 
       <dl className="mb-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
-        <Field label="Empresa" value={ticket.empresa?.nombre ?? '—'} />
+        <Field label="Empresa" value={ticket.empresa?.nombre ?? '—'} icon={<Building2 size={12} />} />
         <Field
           label="Reportado por"
           value={
             ticket.usuarioReporter?.nombre ??
             (ticket.reporterNombre ? `${ticket.reporterNombre} (público)` : '—')
           }
+          icon={<User size={12} />}
         />
-        <Field label="Asignado a" value={ticket.usuarioAsignado?.nombre ?? 'Sin asignar'} />
-        <Field label="Cerrado por" value={ticket.resuelto?.nombre ?? '—'} />
-        <Field label="Categoría" value={ticket.categoria?.nombre ?? '—'} />
-        <Field label="Subcategoría" value={ticket.subcategoria?.nombre ?? '—'} />
-        <Field label="Prioridad" value={ticket.prioridad} />
-        <Field label="Criticidad" value={ticket.criticidad} />
-        <Field label="Dispositivo" value={ticket.dispositivo?.nombre ?? '—'} />
-        <Field label="Abierto" value={new Date(ticket.createdAt).toLocaleString('es-ES')} />
-        <Field label="Cerrado" value={ticket.closedAt ? new Date(ticket.closedAt).toLocaleString('es-ES') : '—'} />
-        <Field label="Tiempo total (apertura→cierre)" value={tiempoTotal} />
-        <Field label="Tiempo trabajado" value={formatDuration(ticket.tiempoReal)} />
-        <Field label="SLA respuesta" value={respuestaBadge?.label ?? '—'} />
-        <Field label="SLA resolución" value={resolucionBadge?.label ?? '—'} />
+        <Field label="Asignado a" value={ticket.usuarioAsignado?.nombre ?? 'Sin asignar'} icon={<UserCheck size={12} />} />
+        <Field label="Cerrado por" value={ticket.resuelto?.nombre ?? '—'} icon={<CheckCircle2 size={12} />} />
+        <Field label="Categoría" value={ticket.categoria?.nombre ?? '—'} icon={<Tag size={12} />} />
+        <Field label="Subcategoría" value={ticket.subcategoria?.nombre ?? '—'} icon={<Tags size={12} />} />
+        <Field label="Prioridad" value={ticket.prioridad} icon={<Flag size={12} />} />
+        <Field label="Criticidad" value={ticket.criticidad} icon={<AlertCircle size={12} />} />
+        <Field label="Dispositivo" value={ticket.dispositivo?.nombre ?? '—'} icon={<Monitor size={12} />} />
+        <Field label="Abierto" value={new Date(ticket.createdAt).toLocaleString('es-ES')} icon={<Calendar size={12} />} />
+        <Field
+          label="Cerrado"
+          value={ticket.closedAt ? new Date(ticket.closedAt).toLocaleString('es-ES') : '—'}
+          icon={<CalendarCheck size={12} />}
+        />
+        <Field label="Tiempo total (apertura→cierre)" value={tiempoTotal} icon={<Hourglass size={12} />} />
+        <Field label="Tiempo trabajado" value={formatDuration(ticket.tiempoReal)} icon={<Clock size={12} />} />
+        <Field label="SLA respuesta" value={respuestaBadge?.label ?? '—'} icon={<Timer size={12} />} />
+        <Field label="SLA resolución" value={resolucionBadge?.label ?? '—'} icon={<Timer size={12} />} />
       </dl>
 
       <div className="mb-6">
