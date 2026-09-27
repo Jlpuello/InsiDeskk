@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Search, Send } from 'lucide-react';
+import { MessageCircle, Search, Send } from 'lucide-react';
 import type { ChatAdapter, ChatConversation, ChatMessage } from './chat.types.ts';
 
 // Hoy (hora) / más viejo (fecha corta) — mismo criterio que Teams/Slack para
@@ -135,13 +135,13 @@ export function ChatBox({
       <div>
         <div className="mb-2 flex items-center gap-2">
           <div className="relative flex-1">
-            <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full rounded-md border border-slate-300 py-1.5 pl-8 pr-2 text-xs focus:border-blue-700 focus:outline-none"
+              className="w-full rounded-md border border-gray-300 py-1.5 pl-8 pr-2 text-xs focus:border-blue-500 focus:outline-none"
             />
           </div>
           {toolbarActions}
@@ -157,8 +157,8 @@ export function ChatBox({
                 className={clsx(
                   'rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
                   activeFilterId === f.id
-                    ? 'bg-blue-700 text-white'
-                    : 'border border-slate-300 bg-white text-slate-600 hover:bg-slate-50',
+                    ? 'bg-blue-600 text-white'
+                    : 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50',
                 )}
               >
                 {f.label}
@@ -168,13 +168,13 @@ export function ChatBox({
         )}
 
         {loadingConversations ? (
-          <p className="px-1 text-sm text-slate-400">Cargando...</p>
+          <p className="px-1 text-sm text-gray-400">Cargando...</p>
         ) : filtered.length === 0 ? (
-          <p className="px-1 text-sm text-slate-400">
+          <p className="px-1 text-sm text-gray-400">
             {conversations.length === 0 ? emptyConversationsLabel : 'Sin resultados.'}
           </p>
         ) : (
-          <div className="space-y-0.5 rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm">
+          <div className="space-y-0.5 rounded-lg border border-gray-200 bg-white p-1.5 shadow-sm">
             {filtered.map((c) => {
               const isActive = c.id === activeConversationId;
               return (
@@ -182,8 +182,8 @@ export function ChatBox({
                   key={c.id}
                   onClick={() => onActiveConversationChange(c.id)}
                   className={clsx(
-                    'flex w-full items-start gap-3 rounded-md px-2.5 py-2 text-left transition-colors',
-                    isActive ? 'bg-blue-50' : 'hover:bg-slate-50',
+                    'flex w-full items-start gap-3 rounded-md border-l-[3px] py-2 pl-2 pr-2.5 text-left transition-colors',
+                    isActive ? 'border-blue-600 bg-blue-50' : 'border-transparent hover:bg-gray-50',
                   )}
                 >
                   <span
@@ -192,8 +192,8 @@ export function ChatBox({
                       c.avatarIcon
                         ? 'bg-indigo-50 text-indigo-700'
                         : isActive
-                          ? 'border border-blue-300 bg-blue-50 text-blue-700'
-                          : 'bg-slate-100 text-slate-700',
+                          ? 'border border-blue-200 bg-blue-50 text-blue-700'
+                          : 'bg-gray-100 text-gray-700',
                     )}
                   >
                     {c.avatarIcon ?? (c.avatarLabel ?? c.title).charAt(0).toUpperCase()}
@@ -203,19 +203,19 @@ export function ChatBox({
                       <span
                         className={clsx(
                           'truncate text-sm',
-                          c.unread ? 'font-semibold text-slate-900' : 'font-medium text-slate-700',
+                          c.unread ? 'font-semibold text-gray-900' : 'font-medium text-gray-700',
                           isActive && 'text-blue-700',
                         )}
                       >
                         {c.title}
                       </span>
-                      <span className="shrink-0 text-[11px] text-slate-400">{shortTime(c.updatedAt)}</span>
+                      <span className="shrink-0 text-[11px] text-gray-400">{shortTime(c.updatedAt)}</span>
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <span className={clsx('truncate text-xs', c.unread ? 'font-medium text-slate-700' : 'text-slate-400')}>
+                      <span className={clsx('truncate text-xs', c.unread ? 'font-medium text-gray-700' : 'text-gray-400')}>
                         {c.subtitle ?? 'Sin mensajes todavía'}
                       </span>
-                      {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-blue-700" />}
+                      {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-blue-600" />}
                     </span>
                   </span>
                 </button>
@@ -226,22 +226,29 @@ export function ChatBox({
       </div>
 
       <div>
-        {!active && <p className="text-sm text-slate-400">{emptySelectionLabel}</p>}
+        {!active && (
+          <div className="flex h-[62vh] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-300 shadow-sm">
+              <MessageCircle size={18} />
+            </span>
+            <p className="text-sm text-gray-400">{emptySelectionLabel}</p>
+          </div>
+        )}
 
         {active && (
-          <div className="flex h-[62vh] flex-col rounded-lg border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
+          <div className="flex h-[62vh] flex-col rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-4">
               <div className="flex min-w-0 items-center gap-3">
                 <span
                   className={clsx(
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                    active.avatarIcon ? 'bg-indigo-50 text-indigo-700' : 'border border-blue-300 bg-blue-50 text-blue-700',
+                    active.avatarIcon ? 'bg-indigo-50 text-indigo-700' : 'border border-blue-200 bg-blue-50 text-blue-700',
                   )}
                 >
                   {active.avatarIcon ?? (active.avatarLabel ?? active.title).charAt(0).toUpperCase()}
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-base font-semibold text-slate-900">{active.title}</p>
+                  <p className="truncate text-base font-semibold text-gray-900">{active.title}</p>
                   {renderSubtitle?.(active)}
                 </div>
               </div>
@@ -250,7 +257,7 @@ export function ChatBox({
 
             <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
               {loadingMessages ? (
-                <p className="text-sm text-slate-400">Cargando mensajes...</p>
+                <p className="text-sm text-gray-400">Cargando mensajes...</p>
               ) : (
                 messages.map((m) => {
                   const authorLabel = m.role === 'other' ? messageAuthorLabel?.(m) : null;
@@ -259,12 +266,12 @@ export function ChatBox({
                       <div
                         className={clsx(
                           'max-w-[72%] rounded-lg px-3.5 py-2.5 text-sm',
-                          m.role === 'own' ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-800',
+                          m.role === 'own' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800',
                         )}
                       >
                         {authorLabel && <p className="mb-0.5 text-xs font-semibold text-indigo-700">{authorLabel}</p>}
                         <p className="whitespace-pre-wrap break-words">{m.text}</p>
-                        <p className={clsx('mt-1 text-[10px]', m.role === 'own' ? 'text-blue-100' : 'text-slate-400')}>
+                        <p className={clsx('mt-1 text-[10px]', m.role === 'own' ? 'text-blue-100' : 'text-gray-400')}>
                           {formatDistanceToNow(new Date(m.createdAt), { addSuffix: true, locale: es })}
                         </p>
                       </div>
@@ -275,20 +282,20 @@ export function ChatBox({
               <div ref={bottomRef} />
             </div>
 
-            <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-slate-200 p-4">
+            <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-gray-200 p-4">
               <input
                 type="text"
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 placeholder={inputPlaceholder}
                 disabled={inputDisabled || sending}
-                className="flex-1 rounded-md border border-slate-300 px-4 py-2 text-sm focus:border-blue-700 focus:outline-none disabled:opacity-50"
+                className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={inputDisabled || sending || !reply.trim()}
                 aria-label="Enviar"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-700 text-white hover:bg-blue-800 disabled:opacity-50"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
               >
                 <Send size={15} />
               </button>
