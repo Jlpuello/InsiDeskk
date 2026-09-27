@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { publicTicketApi } from '../api/public-ticket.api.ts';
+import { PublicGradientBackdrop } from '../../../shared/components/PublicGradientBackdrop.tsx';
 import type { PublicTicketCategory } from '../types/ticket.types.ts';
 
 const inputClasses =
@@ -98,8 +99,9 @@ export function PublicTicketForm() {
 
   if (createdTicketId) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-900 p-4">
+        <PublicGradientBackdrop />
+        <div className="relative z-10 w-full max-w-md rounded-lg border border-gray-200 bg-white p-8 text-center shadow-xl">
           <CheckCircle2 className="mx-auto mb-3 text-green-600" size={40} />
           <h1 className="mb-2 text-lg font-semibold text-gray-900">Ticket registrado</h1>
           <p className="text-sm text-gray-600">
@@ -113,8 +115,9 @@ export function PublicTicketForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-900 p-4">
+      <PublicGradientBackdrop />
+      <div className="relative z-10 w-full max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-xl">
         <h1 className="mb-1 text-lg font-semibold text-gray-900">Reportar un problema</h1>
         <p className="mb-6 text-sm text-gray-500">Sin necesidad de cuenta — dejanos tus datos de contacto.</p>
 
