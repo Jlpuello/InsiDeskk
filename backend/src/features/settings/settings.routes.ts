@@ -22,3 +22,6 @@ settingsRoutes.put('/default-company', asyncHandler(PlatformSettingsController.u
 
 settingsRoutes.get('/email', asyncHandler(PlatformSettingsController.getEmail));
 settingsRoutes.put('/email', asyncHandler(PlatformSettingsController.updateEmail));
+
+settingsRoutes.get('/organization', asyncHandler(PlatformSettingsController.getOrganization));
+settingsRoutes.put('/organization', asyncHandler(PlatformSettingsController.updateOrganization));

@@ -11,9 +11,11 @@ import { AiSettingsSection } from './AiSettingsSection.tsx';
 import { ChatbotSettingsSection } from './ChatbotSettingsSection.tsx';
 import { EmailSettingsSection } from './EmailSettingsSection.tsx';
 import { DocumentationTemplatesSection } from './DocumentationTemplatesSection.tsx';
+import { OrganizationSettingsSection } from './OrganizationSettingsSection.tsx';
 import type { RemotelySettings } from '../types/settings.types.ts';
 
 type SettingsTab =
+  | 'organizacion'
   | 'remotely'
   | 'categorias'
   | 'sla'
@@ -26,6 +28,7 @@ type SettingsTab =
   | 'plantillas';
 
 const TABS: { id: SettingsTab; label: string }[] = [
+  { id: 'organizacion', label: 'Organización' },
   { id: 'remotely', label: 'Remotely' },
   { id: 'categorias', label: 'Categorías' },
   { id: 'sla', label: 'SLA' },
@@ -167,7 +170,7 @@ function RemotelySettingsSection() {
 }
 
 export function SettingsPage() {
-  const [tab, setTab] = useState<SettingsTab>('remotely');
+  const [tab, setTab] = useState<SettingsTab>('organizacion');
 
   return (
     <div className="mx-auto max-w-4xl p-6">
@@ -191,6 +194,7 @@ export function SettingsPage() {
         ))}
       </div>
 
+      {tab === 'organizacion' && <OrganizationSettingsSection />}
       {tab === 'remotely' && <RemotelySettingsSection />}
       {tab === 'categorias' && <TicketCategoriesSection />}
       {tab === 'sla' && <SlaMatrixSection />}

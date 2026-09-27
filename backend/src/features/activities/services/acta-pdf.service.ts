@@ -15,6 +15,11 @@ export interface ActaPdfData {
   firmaImagenPath: string;
   firmadoEn: Date;
   creadoPorNombre: string;
+  // Línea de membrete (razón social · NIT · teléfono · email de quien opera
+  // la instancia) — ver formatIssuerLine. null/undefined si Configuración →
+  // Organización todavía no está cargada, en cuyo caso el footer se ve igual
+  // que antes de este campo.
+  organizacion?: string | null;
 }
 
 // pdfkit escribe en streaming — hay que esperar el evento 'finish' del
@@ -53,7 +58,12 @@ export async function generateActaPdf(data: ActaPdfData, outputPath: string): Pr
       date: data.firmadoEn.toLocaleString('es-ES'),
     });
 
-    drawDocumentFooter(doc, `Documento generado por ${data.creadoPorNombre}`, `Generado ${new Date().toLocaleDateString('es-ES')}`);
+    drawDocumentFooter(
+      doc,
+      `Documento generado por ${data.creadoPorNombre}`,
+      `Generado ${new Date().toLocaleDateString('es-ES')}`,
+      data.organizacion,
+    );
 
     doc.end();
 

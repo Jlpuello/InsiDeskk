@@ -81,3 +81,21 @@ export interface UpdateEmailSettingsInput {
   smtpFrom?: string;
   smtpSecure?: boolean;
 }
+
+// Identidad legal de la empresa que OPERA esta instancia de InsiDesk (no las
+// Company cliente) — se usa como membrete en cotizaciones/informes/actas en
+// PDF y en la home pública. Nada acá es secreto.
+export interface OrganizationSettings {
+  orgRazonSocial: string | null;
+  orgNit: string | null;
+  orgTelefono: string | null;
+  orgEmail: string | null;
+  updatedAt: string | null;
+}
+
+export interface UpdateOrganizationSettingsInput {
+  orgRazonSocial?: string;
+  orgNit?: string;
+  orgTelefono?: string;
+  orgEmail?: string;
+}

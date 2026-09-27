@@ -22,6 +22,7 @@ import { getSlaBadge } from '../utils/sla.ts';
 import { formatDuration } from '../utils/time.ts';
 import { AuthenticatedImage } from '../../../shared/components/AuthenticatedImage.tsx';
 import { DocumentHeader, ReportField as Field, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
+import { ReportFooter } from '../../../shared/components/document/ReportFooter.tsx';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import { hasPermission } from '../../../shared/security/permissions.ts';
 import type { NoteType, Ticket, TicketNote } from '../types/ticket.types.ts';
@@ -195,6 +196,8 @@ export function TicketReport() {
           </ul>
         )}
       </div>
+
+      <ReportFooter />
     </div>
   );
 }

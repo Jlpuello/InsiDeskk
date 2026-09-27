@@ -8,6 +8,8 @@ import { ticketService } from '../../tickets/services/ticket.service.js';
 import { ticketHistoryRepository } from '../../tickets/repositories/ticket-history.repository.js';
 import { userRepository } from '../../users/repositories/user.repository.js';
 import { NotificationService } from '../../notifications/services/notification.service.js';
+import { platformSettingsService } from '../../settings/services/platform-settings.service.js';
+import { formatIssuerLine } from '../../../shared/pdf/document-pdf.js';
 import { hasPermission } from '../../../shared/security/permissions.js';
 import { eventEmitter } from '../../../shared/events/event.emitter.js';
 import { env } from '../../../config/env.js';
@@ -196,6 +198,7 @@ export class QuoteService {
 
     const { token, tokenHash, expiresAt } = quoteTokenService.generate();
     const pdfPath = path.join(process.cwd(), 'uploads', 'quotes', id, `cotizacion-${id}.pdf`);
+    const organizacion = formatIssuerLine(await platformSettingsService.getOrganizationPublic());
 
     await generateQuotePdf(
       {
@@ -214,6 +217,7 @@ export class QuoteService {
         impuestos: quote.impuestos.toString(),
         total: quote.total.toString(),
         creadoPorNombre: quote.creadoPor.nombre,
+        organizacion,
       },
       pdfPath,
     );

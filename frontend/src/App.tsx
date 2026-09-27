@@ -10,7 +10,7 @@ import { DeviceReport } from './features/devices/components/DeviceReport.tsx';
 import { InventoryList } from './features/inventory/components/InventoryList.tsx';
 import { InventoryDetail } from './features/inventory/components/InventoryDetail.tsx';
 import { InventoryReport } from './features/inventory/components/InventoryReport.tsx';
-import { HomeRoute } from './shared/components/HomeRoute.tsx';
+import { RootRoute } from './shared/components/RootRoute.tsx';
 import { SettingsPage } from './features/settings/components/SettingsPage.tsx';
 import { CompaniesPage } from './features/companies/components/CompaniesPage.tsx';
 import { UsersPage } from './features/users/components/UsersPage.tsx';
@@ -42,6 +42,9 @@ function App() {
           decisiones (ver features/chatbot) — ambas rutas de abajo siguen
           funcionando solas para quien ya tenga el link directo. */}
       <Route path="/soporte" element={<SupportLandingPage />} />
+      {/* Decide según sesión: sin login, home pública; con sesión, el mismo
+          dashboard de siempre dentro de AppLayout — ver RootRoute.tsx. */}
+      <Route path="/" element={<RootRoute />} />
       {/* Preview de diseño con datos mock, sin login — ver
           features/messenger/. Sacar esta ruta (o ponerle un guard) cuando
           se conecte a datos reales. */}
@@ -82,7 +85,6 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<HomeRoute />} />
         <Route path="/tickets" element={<TicketList />} />
         <Route path="/tickets/:id" element={<TicketDetail />} />
         <Route path="/activities" element={<ActivityList />} />

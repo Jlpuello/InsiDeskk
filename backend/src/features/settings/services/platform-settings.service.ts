@@ -143,6 +143,36 @@ export interface EffectiveEmailConfig {
   secure: boolean;
 }
 
+// Identidad legal de la empresa que opera esta instancia (no la Company
+// cliente) — se usa como membrete en cotizaciones/informes/actas (PDF) y en
+// la landing pública (ver getOrganizationPublic / GET /api/public/organization).
+// Nada acá es secreto, a diferencia del resto de PlatformSettings.
+export interface OrganizationSettings {
+  orgRazonSocial: string | null;
+  orgNit: string | null;
+  orgTelefono: string | null;
+  orgEmail: string | null;
+  updatedAt: string | null;
+}
+
+export interface UpdateOrganizationSettingsInput {
+  orgRazonSocial?: string;
+  orgNit?: string;
+  orgTelefono?: string;
+  orgEmail?: string;
+}
+
+// Subconjunto expuesto sin login (landing /soporte y la futura home pública)
+// — mismos datos que OrganizationSettings (nada es secreto), separado nomás
+// para que un cambio futuro que sí agregue algo sensible a PlatformSettings
+// no lo exponga por accidente acá.
+export interface OrganizationPublicInfo {
+  razonSocial: string | null;
+  nit: string | null;
+  telefono: string | null;
+  email: string | null;
+}
+
 export class PlatformSettingsService {
   // Vista segura para la UI: el secreto NUNCA viaja, ni completo ni
   // enmascarado — solo un flag de si está configurado. El ID sí se muestra
@@ -328,6 +358,44 @@ export class PlatformSettingsService {
   // Uso interno de features/notifications/jobs/send-email.job.ts — nunca por
   // HTTP. null si el proveedor no es 'smtp' o falta algún campo — en ese
   // caso el job cae al camino de Resend de siempre.
+  async getOrganization(): Promise<OrganizationSettings> {
+    const settings = await platformSettingsRepository.get();
+    return {
+      orgRazonSocial: settings?.orgRazonSocial ?? null,
+      orgNit: settings?.orgNit ?? null,
+      orgTelefono: settings?.orgTelefono ?? null,
+      orgEmail: settings?.orgEmail ?? null,
+      updatedAt: settings?.updatedAt?.toISOString() ?? null,
+    };
+  }
+
+  async updateOrganization(input: UpdateOrganizationSettingsInput, updatedById: string): Promise<OrganizationSettings> {
+    await platformSettingsRepository.upsert({
+      ...(input.orgRazonSocial !== undefined && { orgRazonSocial: input.orgRazonSocial }),
+      ...(input.orgNit !== undefined && { orgNit: input.orgNit }),
+      ...(input.orgTelefono !== undefined && { orgTelefono: input.orgTelefono }),
+      ...(input.orgEmail !== undefined && { orgEmail: input.orgEmail }),
+      updatedById,
+    });
+
+    logger.info(`Datos de organización actualizados por ${updatedById}`);
+    return this.getOrganization();
+  }
+
+  // Sin login — landing pública y membrete de PDFs (acta-pdf.service.ts,
+  // quote-pdf.service.ts vía sus callers). Un campo vacío no rompe nada: cada
+  // consumidor decide cómo mostrar la ausencia (ver formatIssuerLine en
+  // document-pdf.ts para el caso de los PDF).
+  async getOrganizationPublic(): Promise<OrganizationPublicInfo> {
+    const settings = await platformSettingsRepository.get();
+    return {
+      razonSocial: settings?.orgRazonSocial ?? null,
+      nit: settings?.orgNit ?? null,
+      telefono: settings?.orgTelefono ?? null,
+      email: settings?.orgEmail ?? null,
+    };
+  }
+
   async getEffectiveEmailConfig(): Promise<EffectiveEmailConfig | null> {
     const settings = await platformSettingsRepository.get();
     if (

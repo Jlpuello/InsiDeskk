@@ -23,7 +23,7 @@ import { deviceRoutes } from './features/devices/index.js';
 import { userRoutes } from './features/users/index.js';
 import { remotelyRoutes, remotelyPublicRoutes } from './features/remotely/index.js';
 import { notificationRoutes } from './features/notifications/index.js';
-import { settingsRoutes } from './features/settings/index.js';
+import { settingsRoutes, settingsPublicRoutes } from './features/settings/index.js';
 import { companyRoutes } from './features/companies/index.js';
 import { activityRoutes } from './features/activities/index.js';
 import { inventoryRoutes } from './features/inventory/index.js';
@@ -126,6 +126,10 @@ export function createApp(): Application {
   // Chat con IA de la landing de soporte (ver features/ai/) — costo real por
   // mensaje, límite propio más el tope diario.
   app.use('/api/public/ai-chat', publicAiChatLimiter, publicAiChatDailyLimiter, aiChatPublicRoutes);
+  // Razón social/NIT/teléfono/email de la empresa que opera esta instancia,
+  // para la home pública (ver settings.public.routes.ts) — solo lectura, sin
+  // PII propia del visitante, cubierto por el globalLimiter de arriba.
+  app.use('/api/public/settings', settingsPublicRoutes);
 
   // Rutas protegidas (requieren JWT)
   app.use('/api/tickets', verifyJWT, ticketRoutes);

@@ -171,11 +171,15 @@ export function drawSignatureLedger(doc: PDFDoc, opts: { imagePath: string; name
 // Franja de pie — sigue el flujo del contenido (no fija al pie físico de la
 // página) a propósito: estos son documentos de una sola página, cortos, y
 // fijarla en la posición absoluta arriesgaría a superponerse con contenido
-// largo.
-export function drawDocumentFooter(doc: PDFDoc, left: string, right?: string): void {
+// largo. `issuer` (opcional) es la línea de identidad de quien emite el
+// documento (ver formatIssuerLine) — se agrega debajo, separada, para no
+// competir con left/right que son datos del documento en sí (quién lo generó
+// y cuándo).
+export function drawDocumentFooter(doc: PDFDoc, left: string, right?: string, issuer?: string | null): void {
   const marginLeft = doc.page.margins.left;
   const marginRight = doc.page.margins.right;
   const pageWidth = doc.page.width;
+  const contentWidth = pageWidth - marginLeft - marginRight;
   const y = doc.y + 4;
 
   doc.moveTo(marginLeft, y).lineTo(pageWidth - marginRight, y).strokeColor(PDF_PALETTE.line).lineWidth(1).stroke();
@@ -184,4 +188,22 @@ export function drawDocumentFooter(doc: PDFDoc, left: string, right?: string): v
   if (right) {
     doc.text(right, pageWidth - marginRight - 220, y + 10, { width: 220, align: 'right' });
   }
+
+  if (issuer) {
+    doc.font('Helvetica').fontSize(7.5).fillColor(PDF_PALETTE.faint).text(issuer, marginLeft, y + 24, { width: contentWidth });
+  }
+}
+
+// Une los datos de OrganizationPublicInfo en una sola línea para el
+// membrete del footer — null si no hay nada cargado todavía (el admin no
+// llenó Configuración → Organización), en vez de una línea con guiones
+// vacíos que no aporta nada.
+export function formatIssuerLine(org: { razonSocial: string | null; nit: string | null; telefono: string | null; email: string | null }): string | null {
+  const parts = [
+    org.razonSocial,
+    org.nit && `NIT ${org.nit}`,
+    org.telefono && `Tel. ${org.telefono}`,
+    org.email,
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(' · ') : null;
 }

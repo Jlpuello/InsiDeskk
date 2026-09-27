@@ -28,6 +28,10 @@ export interface PlatformSettingsData {
   // string | null (no solo string | undefined) porque el admin tiene que
   // poder LIMPIAR la empresa por defecto, no solo dejarla sin tocar.
   defaultCompanyId?: string | null;
+  orgRazonSocial?: string;
+  orgNit?: string;
+  orgTelefono?: string;
+  orgEmail?: string;
   updatedById: string;
 }
 

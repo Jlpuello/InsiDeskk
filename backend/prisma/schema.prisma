@@ -858,6 +858,15 @@ model PlatformSettings {
   // vez se reestructura Company.
   defaultCompanyId String? @map("default_company_id")
 
+  // Identidad legal de la empresa que OPERA esta instancia de InsiDesk (no
+  // confundir con Company, que son las empresas CLIENTE) — se usa como
+  // membrete en cotizaciones/informes/actas en PDF y en la landing pública
+  // (ver GET /api/public/organization). Nada acá es secreto.
+  orgRazonSocial String? @map("org_razon_social")
+  orgNit         String? @map("org_nit")
+  orgTelefono    String? @map("org_telefono")
+  orgEmail       String? @map("org_email")
+
   updatedAt   DateTime @updatedAt
   updatedById String?  @map("updated_by_id")
 

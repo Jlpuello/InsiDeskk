@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import Joi from 'joi';
 import { platformSettingsService } from '../services/platform-settings.service.js';
 import { AppError } from '../../../shared/utils/error.handler.js';
+import { isValidNitFormat } from '../../../shared/utils/nit.util.js';
 
 // remotelyApiKeyId y remotelyApiKeySecret van siempre juntos: cambiar el ID
 // sin un secreto nuevo (o viceversa) no tiene sentido, porque un secreto
@@ -40,6 +41,16 @@ const updateDefaultCompanySchema = Joi.object({
 // admin puede estar completando el resto de los campos sin cambiar la
 // contraseña (que nunca se muestra, ver placeholder en el frontend) — la
 // combinación mínima para operar la valida getEffectiveEmailConfig(), no Joi.
+const updateOrganizationSchema = Joi.object({
+  orgRazonSocial: Joi.string().min(2).max(200).allow(''),
+  orgNit: Joi.string()
+    .allow('')
+    .custom((value, helpers) => (value === '' || isValidNitFormat(value) ? value : helpers.error('any.invalid')))
+    .messages({ 'any.invalid': 'NIT inválido — solo dígitos, 5 a 15 caracteres' }),
+  orgTelefono: Joi.string().min(5).max(30).allow(''),
+  orgEmail: Joi.string().email({ tlds: false }).allow(''),
+});
+
 const updateEmailSchema = Joi.object({
   emailProvider: Joi.string().valid('resend', 'smtp'),
   smtpHost: Joi.string().min(1).allow(''),
@@ -101,6 +112,19 @@ export const PlatformSettingsController = {
 
     const data = await platformSettingsService.updateDefaultCompany(value.companyId, req.user!.id);
     res.status(200).json({ data });
+  },
+
+  async getOrganization(_req: Request, res: Response): Promise<void> {
+    const settings = await platformSettingsService.getOrganization();
+    res.status(200).json({ data: settings });
+  },
+
+  async updateOrganization(req: Request, res: Response): Promise<void> {
+    const { error, value } = updateOrganizationSchema.validate(req.body);
+    if (error) throw new AppError(error.message, 422);
+
+    const settings = await platformSettingsService.updateOrganization(value, req.user!.id);
+    res.status(200).json({ data: settings });
   },
 
   async getEmail(_req: Request, res: Response): Promise<void> {

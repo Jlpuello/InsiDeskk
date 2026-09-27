@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Printer } from 'lucide-react';
 import { inventoryApi } from '../api/inventory.api.ts';
 import { DocumentHeader, ReportField as Field, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
+import { ReportFooter } from '../../../shared/components/document/ReportFooter.tsx';
 import type { InventoryEquipment, InventoryEquipmentStatus, InventoryEquipmentType } from '../types/inventory.types.ts';
 
 const TIPO_LABELS: Record<InventoryEquipmentType, string> = {
@@ -119,6 +120,8 @@ export function InventoryReport() {
           <p className="whitespace-pre-wrap text-sm text-gray-800">{item.notas}</p>
         </div>
       )}
+
+      <ReportFooter />
     </div>
   );
 }

@@ -6,6 +6,8 @@ import { assertOwnCompanyOrAdmin } from '../../../shared/security/tenant-scope.j
 import { generateActaPdf } from './acta-pdf.service.js';
 import { NotificationService } from '../../notifications/services/notification.service.js';
 import { assertCanManageActivity } from './activity.service.js';
+import { platformSettingsService } from '../../settings/services/platform-settings.service.js';
+import { formatIssuerLine } from '../../../shared/pdf/document-pdf.js';
 
 const notificationService = new NotificationService();
 
@@ -55,6 +57,7 @@ export class ActaService {
       path.basename(input.firmaImagenPath),
     );
     const pdfPath = path.join(process.cwd(), 'uploads', 'actas', actividadId, `acta-${acta.id}.pdf`);
+    const organizacion = formatIssuerLine(await platformSettingsService.getOrganizationPublic());
 
     await generateActaPdf(
       {
@@ -69,6 +72,7 @@ export class ActaService {
         firmaImagenPath: absoluteSignaturePath,
         firmadoEn,
         creadoPorNombre: acta.creadoPor?.nombre ?? 'Sistema',
+        organizacion,
       },
       pdfPath,
     );

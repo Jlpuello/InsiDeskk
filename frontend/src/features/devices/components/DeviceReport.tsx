@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Printer } from 'lucide-react';
 import { deviceApi } from '../api/device.api.ts';
 import { DocumentHeader, ReportField as Field, type DocumentStatusTone } from '../../../shared/components/document/DocumentCard.tsx';
+import { ReportFooter } from '../../../shared/components/document/ReportFooter.tsx';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import { hasPermission } from '../../../shared/security/permissions.ts';
 import type { Device } from '../types/device.types.ts';
@@ -143,6 +144,8 @@ export function DeviceReport() {
           </p>
         </div>
       </div>
+
+      <ReportFooter />
     </div>
   );
 }

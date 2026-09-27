@@ -21,6 +21,10 @@ export interface QuotePdfData {
   impuestos: string;
   total: string;
   creadoPorNombre: string;
+  // Línea de membrete (razón social · NIT · teléfono · email de quien opera
+  // la instancia) — ver formatIssuerLine. null/undefined si Configuración →
+  // Organización todavía no está cargada.
+  organizacion?: string | null;
 }
 
 const COL_X = [0, 0.46, 0.6, 0.76, 0.88] as const; // fracciones del ancho del contenido
@@ -96,7 +100,12 @@ export async function generateQuotePdf(data: QuotePdfData, outputPath: string): 
 
     doc.y = doc.y + 20;
     doc.x = marginLeft;
-    drawDocumentFooter(doc, `Documento generado por ${data.creadoPorNombre}`, `Generado ${new Date().toLocaleDateString('es-ES')}`);
+    drawDocumentFooter(
+      doc,
+      `Documento generado por ${data.creadoPorNombre}`,
+      `Generado ${new Date().toLocaleDateString('es-ES')}`,
+      data.organizacion,
+    );
 
     doc.end();
 

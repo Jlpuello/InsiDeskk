@@ -9,6 +9,8 @@ import type {
   DefaultCompanySettings,
   EmailSettings,
   UpdateEmailSettingsInput,
+  OrganizationSettings,
+  UpdateOrganizationSettingsInput,
 } from '../types/settings.types.ts';
 
 export const settingsApi = {
@@ -59,6 +61,16 @@ export const settingsApi = {
 
   async updateEmail(input: UpdateEmailSettingsInput): Promise<EmailSettings> {
     const { data } = await apiClient.put<{ data: EmailSettings }>('/settings/email', input);
+    return data.data;
+  },
+
+  async getOrganization(): Promise<OrganizationSettings> {
+    const { data } = await apiClient.get<{ data: OrganizationSettings }>('/settings/organization');
+    return data.data;
+  },
+
+  async updateOrganization(input: UpdateOrganizationSettingsInput): Promise<OrganizationSettings> {
+    const { data } = await apiClient.put<{ data: OrganizationSettings }>('/settings/organization', input);
     return data.data;
   },
 };
