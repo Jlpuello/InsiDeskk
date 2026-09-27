@@ -1,5 +1,6 @@
 import { Prisma, type Company } from '@prisma/client';
 import { getPrismaClient } from '../../../shared/prisma/client.js';
+import { nitMatches } from '../../../shared/utils/nit.util.js';
 
 export class CompanyRepository {
   private get prisma() {
@@ -31,13 +32,24 @@ export class CompanyRepository {
     });
   }
 
-  // Usado por el formulario público de tickets (sin login) para identificar
-  // la empresa por NIT — match exacto, solo empresas activas.
+  // Usado por el formulario público de tickets/chat (sin login) para
+  // identificar la empresa por NIT. Primero un match exacto (nit es
+  // @unique, usa el índice); si no aparece, cae a nitMatches en memoria —
+  // cubre el caso real de un NIT guardado como "900123456-7" (con el dígito
+  // de verificación) contra alguien que tipeó solo "900123456".
   async findByNit(nit: string): Promise<Pick<Company, 'id' | 'nombre'> | null> {
-    return this.prisma.company.findFirst({
+    const exact = await this.prisma.company.findFirst({
       where: { nit, activo: true },
       select: { id: true, nombre: true },
     });
+    if (exact) return exact;
+
+    const candidates = await this.prisma.company.findMany({
+      where: { activo: true, nit: { not: null } },
+      select: { id: true, nombre: true, nit: true },
+    });
+    const match = candidates.find((c) => c.nit && nitMatches(c.nit, nit));
+    return match ? { id: match.id, nombre: match.nombre } : null;
   }
 
   // Alta mínima desde la landing pública cuando el NIT no matcheó ninguna
