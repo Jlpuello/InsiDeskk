@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { publicTicketApi } from '../api/public-ticket.api.ts';
 import { PublicGradientBackdrop } from '../../../shared/components/PublicGradientBackdrop.tsx';
+import { useSeoMeta } from '../../../shared/hooks/useSeoMeta.ts';
 import type { PublicTicketCategory } from '../types/ticket.types.ts';
 
 const inputClasses =
@@ -36,6 +37,11 @@ export function PublicTicketForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createdTicketId, setCreatedTicketId] = useState<string | null>(null);
+
+  useSeoMeta({
+    fallbackTitle: 'Reportar un problema · InsiDesk',
+    fallbackDescription: 'Reportá un problema técnico sin necesidad de cuenta — dejanos tus datos de contacto.',
+  });
 
   useEffect(() => {
     if (stage !== 'form') return;

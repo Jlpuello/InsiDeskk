@@ -51,6 +51,15 @@ const updateOrganizationSchema = Joi.object({
   orgEmail: Joi.string().email({ tlds: false }).allow(''),
 });
 
+// Límites orientativos de largo que Google trunca en el resultado de
+// búsqueda (~60 caracteres el título, ~160 la descripción) — no son un
+// límite duro real, pero avisan al admin antes de que quede cortado.
+const updateSeoSchema = Joi.object({
+  seoMetaTitle: Joi.string().max(70).allow(''),
+  seoMetaDescription: Joi.string().max(200).allow(''),
+  seoMetaKeywords: Joi.string().max(300).allow(''),
+});
+
 const updateEmailSchema = Joi.object({
   emailProvider: Joi.string().valid('resend', 'smtp'),
   smtpHost: Joi.string().min(1).allow(''),
@@ -124,6 +133,19 @@ export const PlatformSettingsController = {
     if (error) throw new AppError(error.message, 422);
 
     const settings = await platformSettingsService.updateOrganization(value, req.user!.id);
+    res.status(200).json({ data: settings });
+  },
+
+  async getSeo(_req: Request, res: Response): Promise<void> {
+    const settings = await platformSettingsService.getSeo();
+    res.status(200).json({ data: settings });
+  },
+
+  async updateSeo(req: Request, res: Response): Promise<void> {
+    const { error, value } = updateSeoSchema.validate(req.body);
+    if (error) throw new AppError(error.message, 422);
+
+    const settings = await platformSettingsService.updateSeo(value, req.user!.id);
     res.status(200).json({ data: settings });
   },
 

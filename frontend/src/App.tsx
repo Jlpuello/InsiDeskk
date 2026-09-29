@@ -20,6 +20,8 @@ import { LoginPage } from './features/auth/components/LoginPage.tsx';
 import { PublicTicketForm } from './features/tickets/components/PublicTicketForm.tsx';
 import { PublicChatWidget } from './features/conversations/components/PublicChatWidget.tsx';
 import { SupportLandingPage } from './features/support/components/SupportLandingPage.tsx';
+import { TermsPage } from './features/legal/components/TermsPage.tsx';
+import { PrivacyPage } from './features/legal/components/PrivacyPage.tsx';
 import { MessagesPage } from './shared/components/MessagesPage.tsx';
 import { MessengerLayout } from './features/messenger/components/MessengerLayout.tsx';
 import { PublicQuoteApproval } from './features/quotes/components/PublicQuoteApproval.tsx';
@@ -42,6 +44,8 @@ function App() {
           decisiones (ver features/chatbot) — ambas rutas de abajo siguen
           funcionando solas para quien ya tenga el link directo. */}
       <Route path="/soporte" element={<SupportLandingPage />} />
+      <Route path="/terminos" element={<TermsPage />} />
+      <Route path="/privacidad" element={<PrivacyPage />} />
       {/* Decide según sesión: sin login, home pública; con sesión, el mismo
           dashboard de siempre dentro de AppLayout — ver RootRoute.tsx. */}
       <Route path="/" element={<RootRoute />} />

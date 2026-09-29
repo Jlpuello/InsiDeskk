@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
 import { PublicGradientBackdrop } from '../../../shared/components/PublicGradientBackdrop.tsx';
+import { useSeoMeta } from '../../../shared/hooks/useSeoMeta.ts';
 import { FloatingSupportWidget } from './FloatingSupportWidget.tsx';
 
 // Punto de entrada único a soporte para empresas con o sin contrato/registro
@@ -11,6 +12,11 @@ import { FloatingSupportWidget } from './FloatingSupportWidget.tsx';
 // para quien tenga el link directo.
 export function SupportLandingPage() {
   const [widgetOpen, setWidgetOpen] = useState(false);
+
+  useSeoMeta({
+    fallbackTitle: 'Soporte técnico · InsiDesk',
+    fallbackDescription: '¿Necesitás ayuda con tu equipo o tu red? Con o sin contrato vigente, nuestro equipo te responde al instante.',
+  });
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-900">

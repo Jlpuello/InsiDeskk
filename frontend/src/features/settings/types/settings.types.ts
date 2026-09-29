@@ -99,3 +99,17 @@ export interface UpdateOrganizationSettingsInput {
   orgTelefono?: string;
   orgEmail?: string;
 }
+
+// Título/descripción/keywords de las páginas públicas — ver useSeoMeta.
+export interface SeoSettings {
+  seoMetaTitle: string | null;
+  seoMetaDescription: string | null;
+  seoMetaKeywords: string | null;
+  updatedAt: string | null;
+}
+
+export interface UpdateSeoSettingsInput {
+  seoMetaTitle?: string;
+  seoMetaDescription?: string;
+  seoMetaKeywords?: string;
+}

@@ -9,4 +9,6 @@ export type {
   OrganizationSettings,
   UpdateOrganizationSettingsInput,
   OrganizationPublicInfo,
+  SeoSettings,
+  UpdateSeoSettingsInput,
 } from './services/platform-settings.service.js';

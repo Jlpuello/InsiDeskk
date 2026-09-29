@@ -12,10 +12,12 @@ import { ChatbotSettingsSection } from './ChatbotSettingsSection.tsx';
 import { EmailSettingsSection } from './EmailSettingsSection.tsx';
 import { DocumentationTemplatesSection } from './DocumentationTemplatesSection.tsx';
 import { OrganizationSettingsSection } from './OrganizationSettingsSection.tsx';
+import { SeoSettingsSection } from './SeoSettingsSection.tsx';
 import type { RemotelySettings } from '../types/settings.types.ts';
 
 type SettingsTab =
   | 'organizacion'
+  | 'seo'
   | 'remotely'
   | 'categorias'
   | 'sla'
@@ -29,6 +31,7 @@ type SettingsTab =
 
 const TABS: { id: SettingsTab; label: string }[] = [
   { id: 'organizacion', label: 'Organización' },
+  { id: 'seo', label: 'SEO' },
   { id: 'remotely', label: 'Remotely' },
   { id: 'categorias', label: 'Categorías' },
   { id: 'sla', label: 'SLA' },
@@ -195,6 +198,7 @@ export function SettingsPage() {
       </div>
 
       {tab === 'organizacion' && <OrganizationSettingsSection />}
+      {tab === 'seo' && <SeoSettingsSection />}
       {tab === 'remotely' && <RemotelySettingsSection />}
       {tab === 'categorias' && <TicketCategoriesSection />}
       {tab === 'sla' && <SlaMatrixSection />}

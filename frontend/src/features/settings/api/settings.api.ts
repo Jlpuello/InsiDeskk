@@ -11,6 +11,8 @@ import type {
   UpdateEmailSettingsInput,
   OrganizationSettings,
   UpdateOrganizationSettingsInput,
+  SeoSettings,
+  UpdateSeoSettingsInput,
 } from '../types/settings.types.ts';
 
 export const settingsApi = {
@@ -71,6 +73,16 @@ export const settingsApi = {
 
   async updateOrganization(input: UpdateOrganizationSettingsInput): Promise<OrganizationSettings> {
     const { data } = await apiClient.put<{ data: OrganizationSettings }>('/settings/organization', input);
+    return data.data;
+  },
+
+  async getSeo(): Promise<SeoSettings> {
+    const { data } = await apiClient.get<{ data: SeoSettings }>('/settings/seo');
+    return data.data;
+  },
+
+  async updateSeo(input: UpdateSeoSettingsInput): Promise<SeoSettings> {
+    const { data } = await apiClient.put<{ data: SeoSettings }>('/settings/seo', input);
     return data.data;
   },
 };

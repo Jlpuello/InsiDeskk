@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { Boxes, Building2, Laptop, Mail, MessageCircle, Phone, Receipt, Ticket } from 'lucide-react';
 import { PublicGradientBackdrop } from '../../../shared/components/PublicGradientBackdrop.tsx';
+import { SoftGradientBackdrop } from '../../../shared/components/SoftGradientBackdrop.tsx';
 import { organizationPublicApi, type OrganizationPublicInfo } from '../../../shared/api/organization-public.api.ts';
+import { useSeoMeta } from '../../../shared/hooks/useSeoMeta.ts';
 
 const SERVICIOS = [
   {
@@ -39,6 +41,12 @@ const SLIDE_INTERVAL_MS = 7000;
 export function HomeLandingPage() {
   const [org, setOrg] = useState<OrganizationPublicInfo | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
+
+  useSeoMeta({
+    fallbackTitle: 'InsiDesk · Mesa de ayuda y soporte técnico',
+    fallbackDescription:
+      'Mesa de ayuda, soporte remoto, gestión de equipos y cotizaciones en un solo lugar, con seguimiento claro de principio a fin.',
+  });
 
   useEffect(() => {
     organizationPublicApi.get().then(setOrg).catch(() => {});
@@ -97,7 +105,8 @@ export function HomeLandingPage() {
           activeSlide === 1 ? 'z-10 opacity-100' : 'z-0 opacity-0',
         )}
       >
-        <div className="mx-auto w-full max-w-5xl">
+        <SoftGradientBackdrop />
+        <div className="relative z-10 mx-auto w-full max-w-5xl">
           <p className="mb-2 text-center text-xs font-semibold uppercase tracking-widest text-blue-700">Qué hacemos</p>
           <h2 className="mb-10 text-center text-2xl font-semibold text-gray-900 sm:text-3xl">Nuestros servicios</h2>
 
@@ -122,43 +131,59 @@ export function HomeLandingPage() {
           activeSlide === 2 ? 'z-10 opacity-100' : 'z-0 opacity-0',
         )}
       >
-        <span className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-          <Building2 size={22} />
-        </span>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-700">Contacto</p>
+        <SoftGradientBackdrop />
+        <div className="relative z-10 flex flex-col items-center">
+          <span className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+            <Building2 size={22} />
+          </span>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-700">Contacto</p>
 
-        {hasOrgInfo ? (
-          <>
-            <h2 className="mb-1 text-2xl font-semibold text-gray-900 sm:text-3xl">{org?.razonSocial ?? 'InsiDesk'}</h2>
-            {org?.nit && <p className="mb-6 text-sm text-gray-400">NIT {org.nit}</p>}
-            <div className="flex flex-col items-center gap-3 text-sm text-gray-600 sm:flex-row sm:gap-6">
-              {org?.telefono && (
-                <span className="flex items-center gap-1.5">
-                  <Phone size={14} /> {org.telefono}
-                </span>
-              )}
-              {org?.email && (
-                <span className="flex items-center gap-1.5">
-                  <Mail size={14} /> {org.email}
-                </span>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <h2 className="mb-2 text-2xl font-semibold text-gray-900 sm:text-3xl">¿Tenés dudas?</h2>
-            <p className="mb-6 max-w-sm text-sm text-gray-500">
-              Escribinos por el chat de soporte y te respondemos al instante.
-            </p>
-            <Link
-              to="/soporte"
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
-            >
-              <MessageCircle size={16} />
-              Ir a soporte
+          {hasOrgInfo ? (
+            <>
+              <h2 className="mb-1 text-2xl font-semibold text-gray-900 sm:text-3xl">{org?.razonSocial ?? 'InsiDesk'}</h2>
+              {org?.nit && <p className="mb-6 text-sm text-gray-400">NIT {org.nit}</p>}
+              <div className="flex flex-col items-center gap-3 text-sm text-gray-600 sm:flex-row sm:gap-6">
+                {org?.telefono && (
+                  <span className="flex items-center gap-1.5">
+                    <Phone size={14} /> {org.telefono}
+                  </span>
+                )}
+                {org?.email && (
+                  <span className="flex items-center gap-1.5">
+                    <Mail size={14} /> {org.email}
+                  </span>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="mb-2 text-2xl font-semibold text-gray-900 sm:text-3xl">¿Tenés dudas?</h2>
+              <p className="mb-6 max-w-sm text-sm text-gray-500">
+                Escribinos por el chat de soporte y te respondemos al instante.
+              </p>
+              <Link
+                to="/soporte"
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              >
+                <MessageCircle size={16} />
+                Ir a soporte
+              </Link>
+            </>
+          )}
+        </div>
+
+        <div className="absolute inset-x-0 bottom-16 z-10 flex flex-col items-center gap-1.5 text-xs text-gray-400">
+          <div className="flex items-center gap-4">
+            <Link to="/terminos" className="hover:text-gray-600 hover:underline">
+              Términos y condiciones
             </Link>
-          </>
-        )}
+            <span className="text-gray-300">·</span>
+            <Link to="/privacidad" className="hover:text-gray-600 hover:underline">
+              Política de privacidad
+            </Link>
+          </div>
+          <p>© {new Date().getFullYear()} {org?.razonSocial || 'InsiDesk'}</p>
+        </div>
       </section>
 
       {/* Navegación entre secciones */}

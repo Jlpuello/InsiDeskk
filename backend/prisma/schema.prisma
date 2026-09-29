@@ -867,6 +867,14 @@ model PlatformSettings {
   orgTelefono    String? @map("org_telefono")
   orgEmail       String? @map("org_email")
 
+  // SEO de las páginas públicas (home, /soporte, /reportar) — título/
+  // descripción/keywords que se aplican como <title>/<meta name="description">
+  // en tiempo de carga (ver useSeoMeta en el frontend). Nada acá es secreto,
+  // expuesto también sin login en GET /api/public/settings/seo.
+  seoMetaTitle       String? @map("seo_meta_title")
+  seoMetaDescription String? @map("seo_meta_description")
+  seoMetaKeywords    String? @map("seo_meta_keywords")
+
   updatedAt   DateTime @updatedAt
   updatedById String?  @map("updated_by_id")
 

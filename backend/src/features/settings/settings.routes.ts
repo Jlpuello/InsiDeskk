@@ -25,3 +25,6 @@ settingsRoutes.put('/email', asyncHandler(PlatformSettingsController.updateEmail
 
 settingsRoutes.get('/organization', asyncHandler(PlatformSettingsController.getOrganization));
 settingsRoutes.put('/organization', asyncHandler(PlatformSettingsController.updateOrganization));
+
+settingsRoutes.get('/seo', asyncHandler(PlatformSettingsController.getSeo));
+settingsRoutes.put('/seo', asyncHandler(PlatformSettingsController.updateSeo));

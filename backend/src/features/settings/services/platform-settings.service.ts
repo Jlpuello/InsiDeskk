@@ -173,6 +173,24 @@ export interface OrganizationPublicInfo {
   email: string | null;
 }
 
+// Título/descripción/keywords para las páginas públicas (home, /soporte,
+// /reportar) — sin SSR, esto se aplica client-side (ver useSeoMeta en el
+// frontend), así que ayuda al tab del navegador y a cualquier crawler que
+// ejecute JS, pero no a un scraper de preview (Slack/WhatsApp) que solo lee
+// el HTML crudo — para eso, index.html trae sus propios valores por defecto.
+export interface SeoSettings {
+  seoMetaTitle: string | null;
+  seoMetaDescription: string | null;
+  seoMetaKeywords: string | null;
+  updatedAt: string | null;
+}
+
+export interface UpdateSeoSettingsInput {
+  seoMetaTitle?: string;
+  seoMetaDescription?: string;
+  seoMetaKeywords?: string;
+}
+
 export class PlatformSettingsService {
   // Vista segura para la UI: el secreto NUNCA viaja, ni completo ni
   // enmascarado — solo un flag de si está configurado. El ID sí se muestra
@@ -393,6 +411,38 @@ export class PlatformSettingsService {
       nit: settings?.orgNit ?? null,
       telefono: settings?.orgTelefono ?? null,
       email: settings?.orgEmail ?? null,
+    };
+  }
+
+  async getSeo(): Promise<SeoSettings> {
+    const settings = await platformSettingsRepository.get();
+    return {
+      seoMetaTitle: settings?.seoMetaTitle ?? null,
+      seoMetaDescription: settings?.seoMetaDescription ?? null,
+      seoMetaKeywords: settings?.seoMetaKeywords ?? null,
+      updatedAt: settings?.updatedAt?.toISOString() ?? null,
+    };
+  }
+
+  async updateSeo(input: UpdateSeoSettingsInput, updatedById: string): Promise<SeoSettings> {
+    await platformSettingsRepository.upsert({
+      ...(input.seoMetaTitle !== undefined && { seoMetaTitle: input.seoMetaTitle }),
+      ...(input.seoMetaDescription !== undefined && { seoMetaDescription: input.seoMetaDescription }),
+      ...(input.seoMetaKeywords !== undefined && { seoMetaKeywords: input.seoMetaKeywords }),
+      updatedById,
+    });
+
+    logger.info(`Configuración de SEO actualizada por ${updatedById}`);
+    return this.getSeo();
+  }
+
+  // Sin login — lo consume useSeoMeta en las páginas públicas.
+  async getSeoPublic(): Promise<Omit<SeoSettings, 'updatedAt'>> {
+    const settings = await platformSettingsRepository.get();
+    return {
+      seoMetaTitle: settings?.seoMetaTitle ?? null,
+      seoMetaDescription: settings?.seoMetaDescription ?? null,
+      seoMetaKeywords: settings?.seoMetaKeywords ?? null,
     };
   }
 

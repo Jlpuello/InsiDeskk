@@ -3,7 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>InsiDesk · Sistema de Tickets</title>
+    <title>InsiDesk · Mesa de ayuda y soporte técnico</title>
+    <!-- Valores por defecto para quien lee el HTML crudo sin ejecutar JS (un
+         scraper de preview de Slack/WhatsApp, o un crawler que no corre JS) —
+         useSeoMeta (ver shared/hooks) los reemplaza en tiempo de carga con lo
+         cargado en Configuración → SEO, si el admin cargó algo ahí. -->
+    <meta
+      name="description"
+      content="Mesa de ayuda, soporte remoto, gestión de equipos y cotizaciones en un solo lugar, con seguimiento claro de principio a fin."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0b1f45" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="InsiDesk" />
+    <meta property="og:title" content="InsiDesk · Mesa de ayuda y soporte técnico" />
+    <meta
+      property="og:description"
+      content="Mesa de ayuda, soporte remoto, gestión de equipos y cotizaciones en un solo lugar, con seguimiento claro de principio a fin."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <!-- Solo para el título de DocumentCard (cierre de ticket, acta de entrega,
          informes) — le da aire de "documento formal" sin tocar la tipografía
          del resto de la app, que sigue en el stack sans por defecto. -->

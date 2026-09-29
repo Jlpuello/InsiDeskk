@@ -32,6 +32,9 @@ export interface PlatformSettingsData {
   orgNit?: string;
   orgTelefono?: string;
   orgEmail?: string;
+  seoMetaTitle?: string;
+  seoMetaDescription?: string;
+  seoMetaKeywords?: string;
   updatedById: string;
 }
 
