@@ -11,6 +11,10 @@ export interface ConversationSummary {
   contactoNombre: string;
   contactoEmail: string | null;
   contactoTelefono: string | null;
+  // Ver Ticket.contactoVerificado (mismo criterio) — nunca bloquea, solo
+  // marca para revisión cuando el contacto no coincide con ninguno ya
+  // conocido de esta empresa.
+  contactoVerificado: boolean;
   usuarioAsignadoId: string | null;
   usuarioAsignado: { id: string; nombre: string } | null;
   tieneNoLeidos: boolean;

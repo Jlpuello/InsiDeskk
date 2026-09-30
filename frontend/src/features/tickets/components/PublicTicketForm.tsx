@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { publicTicketApi } from '../api/public-ticket.api.ts';
 import { PublicGradientBackdrop } from '../../../shared/components/PublicGradientBackdrop.tsx';
+import { Turnstile } from '../../../shared/components/Turnstile.tsx';
 import { useSeoMeta } from '../../../shared/hooks/useSeoMeta.ts';
 import type { PublicTicketCategory } from '../types/ticket.types.ts';
 
@@ -17,6 +18,9 @@ const labelClasses = 'mb-1 block text-sm font-medium text-gray-700';
 // ticket desde acá — se deriva a /soporte (el bot), que sí sabe manejar
 // "NIT no encontrado" y "sin NIT" con la verificación de seguridad
 // correspondiente (ver FloatingSupportWidget.tsx / public-ticket.controller.ts).
+// El NIT no es secreto, así que Turnstile se exige igual acá aunque la
+// empresa ya esté registrada — es la única barrera real contra que alguien
+// abra tickets a nombre de una empresa cuyo NIT conoce.
 type Stage = 'nit' | 'no-encontrada' | 'form';
 
 export function PublicTicketForm() {
@@ -34,6 +38,7 @@ export function PublicTicketForm() {
   const [reporterNombre, setReporterNombre] = useState('');
   const [reporterEmail, setReporterEmail] = useState('');
   const [reporterTelefono, setReporterTelefono] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createdTicketId, setCreatedTicketId] = useState<string | null>(null);
@@ -81,12 +86,17 @@ export function PublicTicketForm() {
       setSubmitError('Dejá al menos un dato de contacto: email o teléfono');
       return;
     }
+    if (!turnstileToken) {
+      setSubmitError('Completá la verificación de seguridad antes de enviar.');
+      return;
+    }
 
     setSaving(true);
     setSubmitError(null);
     try {
       const ticket = await publicTicketApi.create({
         nit: nit.trim(),
+        turnstileToken,
         titulo,
         descripcion: descripcion || undefined,
         categoriaId: categoriaId || undefined,
@@ -292,11 +302,13 @@ export function PublicTicketForm() {
               <p className="text-xs text-gray-400">Dejá al menos uno de los dos.</p>
             </div>
 
+            <Turnstile onVerify={setTurnstileToken} />
+
             {submitError && <p className="text-sm text-red-600">{submitError}</p>}
 
             <button
               type="submit"
-              disabled={saving || titulo.trim().length < 3 || reporterNombre.trim().length < 2}
+              disabled={saving || titulo.trim().length < 3 || reporterNombre.trim().length < 2 || !turnstileToken}
               className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
               {saving ? 'Enviando...' : 'Enviar ticket'}

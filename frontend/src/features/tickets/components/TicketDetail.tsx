@@ -409,6 +409,14 @@ export function TicketDetail() {
                   Público
                 </span>
               )}
+              {!ticket.usuarioReporterId && ticket.contactoVerificado === false && (
+                <span
+                  title="Este contacto no coincide con ninguna cuenta, ticket o conversación previa de esta empresa — verificá antes de tratarlo como un pedido legítimo."
+                  className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700"
+                >
+                  Contacto no verificado
+                </span>
+              )}
               {!ticket.usuarioReporterId && (ticket.reporterEmail || ticket.reporterTelefono) && (
                 <span className="block text-xs text-gray-400">
                   {[ticket.reporterEmail, ticket.reporterTelefono].filter(Boolean).join(' · ')}

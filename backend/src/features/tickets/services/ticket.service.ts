@@ -16,6 +16,7 @@ import { AppError, NotFoundError } from '../../../shared/utils/error.handler.js'
 import { noteRepository } from '../repositories/note.repository.js';
 import { ticketHistoryRepository } from '../repositories/ticket-history.repository.js';
 import { userRepository } from '../../users/repositories/user.repository.js';
+import { isKnownCompanyContact } from '../../../shared/security/contact-verification.js';
 
 export interface CreateTicketDTO {
   titulo: string;
@@ -90,6 +91,13 @@ export class TicketService {
     const slaRespuestaVence = new Date(now + policy.tiempoRespuestaMin * 60_000);
     const slaResolucionVence = new Date(now + policy.tiempoResolucionMin * 60_000);
 
+    // Solo el flujo público (sin usuarioReporterId) necesita esta señal — el
+    // autenticado ya tiene identidad real, contactoVerificado se queda en su
+    // default (true).
+    const contactoVerificado = data.usuarioReporterId
+      ? undefined
+      : await isKnownCompanyContact(data.empresaId, data.reporterEmail, data.reporterTelefono);
+
     const ticket = await ticketRepository.create({
       titulo: data.titulo,
       descripcion: data.descripcion,
@@ -100,6 +108,7 @@ export class TicketService {
             reporterNombre: data.reporterNombre,
             reporterEmail: data.reporterEmail,
             reporterTelefono: data.reporterTelefono,
+            contactoVerificado,
           }),
       ...(usuarioAsignadoId && { usuarioAsignado: { connect: { id: usuarioAsignadoId } } }),
       ...(data.dispositivoId && { dispositivo: { connect: { id: data.dispositivoId } } }),

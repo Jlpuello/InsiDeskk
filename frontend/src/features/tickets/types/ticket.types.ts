@@ -71,6 +71,12 @@ export interface Ticket {
   reporterNombre?: string | null;
   reporterEmail?: string | null;
   reporterTelefono?: string | null;
+  // false solo en el flujo público cuando el contacto no coincide con
+  // ninguno ya conocido de esta empresa — ver
+  // shared/security/contact-verification.ts en el backend. Nunca bloqueó la
+  // creación, es una señal para que el equipo revise antes de tratarlo como
+  // un pedido legítimo de esa empresa.
+  contactoVerificado?: boolean;
   usuarioAsignadoId?: string | null;
   usuarioAsignado?: { id: string; nombre: string; email: string } | null;
   resueltoId?: string | null;
@@ -125,9 +131,9 @@ export interface CreatePublicTicketInput {
   // Solo si el NIT no matcheó ninguna empresa registrada — ver
   // companyService.resolveOrProvisionByNit en el backend.
   nombreEmpresa?: string;
-  // Requerido cuando sinNit:true o cuando se manda nombreEmpresa — ver
-  // shared/components/Turnstile.tsx.
-  turnstileToken?: string;
+  // Se exige SIEMPRE, con o sin empresa ya registrada — el NIT no es
+  // secreto, ver public-ticket.controller.ts. Ver shared/components/Turnstile.tsx.
+  turnstileToken: string;
   titulo: string;
   descripcion?: string;
   categoriaId?: string;

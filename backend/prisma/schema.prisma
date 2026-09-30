@@ -343,6 +343,14 @@ model Ticket {
   reporterNombre     String?            @map("reporter_nombre")
   reporterEmail      String?            @map("reporter_email")
   reporterTelefono   String?            @map("reporter_telefono")
+  // false SOLO en el flujo público (formulario/chat sin cuenta) cuando el
+  // email/teléfono de quien reporta no coincide con ningún contacto ya
+  // conocido de esta empresa (una cuenta de portal, un ticket o conversación
+  // anterior) — ver shared/security/contact-verification.ts. Nunca bloquea
+  // la creación (mismo criterio que Company.verificado), solo lo marca para
+  // que el equipo lo revise antes de tratarlo como un pedido legítimo de esa
+  // empresa. true por default: el flujo autenticado siempre es true.
+  contactoVerificado Boolean            @default(true) @map("contacto_verificado")
   usuarioAsignadoId  String?            @map("usuario_asignado_id")
   usuarioAsignado    User?              @relation("usuario_asignado", fields: [usuarioAsignadoId], references: [id], onDelete: SetNull)
   dispositivoId      String?            @map("dispositivo_id")
@@ -1104,6 +1112,9 @@ model Conversation {
   contactoNombre    String              @map("contacto_nombre")
   contactoEmail     String?             @map("contacto_email")
   contactoTelefono  String?             @map("contacto_telefono")
+  // Ver Ticket.contactoVerificado — mismo criterio, mismo helper
+  // (isKnownCompanyContact). true por default.
+  contactoVerificado Boolean            @default(true) @map("contacto_verificado")
   // Acceso anónimo sin login — mismo patrón que Quote.tokenHash (hash vía
   // encryptionService.blindIndex, el token real solo vive en el localStorage
   // del navegador del visitante). Sin expiración a propósito: a diferencia

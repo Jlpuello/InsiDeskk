@@ -71,6 +71,7 @@ export function FloatingSupportWidget({ open, onOpenChange }: FloatingSupportWid
   const [formEmail, setFormEmail] = useState('');
   const [formTelefono, setFormTelefono] = useState('');
   const [formMensaje, setFormMensaje] = useState('');
+  const [liveTurnstileToken, setLiveTurnstileToken] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [reply, setReply] = useState('');
@@ -239,6 +240,7 @@ export function FloatingSupportWidget({ open, onOpenChange }: FloatingSupportWid
     setLiveStage('nit');
     setCompany(null);
     setNombreEmpresa('');
+    setLiveTurnstileToken(null);
   }
 
   async function handleStart(e: FormEvent) {
@@ -247,12 +249,17 @@ export function FloatingSupportWidget({ open, onOpenChange }: FloatingSupportWid
       setStartError('Dejá al menos un dato de contacto: email o teléfono');
       return;
     }
+    if (!liveTurnstileToken) {
+      setStartError('Completá la verificación de seguridad antes de enviar.');
+      return;
+    }
 
     setStarting(true);
     setStartError(null);
     try {
       const { token: newToken } = await conversationPublicApi.start({
         nit: nit.trim(),
+        turnstileToken: liveTurnstileToken,
         ...(!company && { nombreEmpresa: nombreEmpresa.trim() }),
         contactoNombre: formNombre,
         contactoEmail: formEmail || undefined,
@@ -297,11 +304,6 @@ export function FloatingSupportWidget({ open, onOpenChange }: FloatingSupportWid
     }
   }
 
-  // NIT dado pero no encontrado, o directamente "sin NIT" — los dos únicos
-  // caminos que autoprovisionan/usan la empresa por defecto, y por eso los
-  // únicos que necesitan Turnstile (ver public-ticket.controller.ts).
-  const ticketNeedsCaptcha = ticketSinNit || (ticketStage !== 'nit' && !ticketCompany);
-
   // Separado de handleTicketVerify para poder llamarlo también desde el
   // handoff de la IA (ver handleAiToolCall).
   async function runTicketVerify(nitValue: string) {
@@ -343,7 +345,7 @@ export function FloatingSupportWidget({ open, onOpenChange }: FloatingSupportWid
       setTicketSubmitError('Dejá al menos un dato de contacto: email o teléfono');
       return;
     }
-    if (ticketNeedsCaptcha && !ticketTurnstileToken) {
+    if (!ticketTurnstileToken) {
       setTicketSubmitError('Completá la verificación de seguridad antes de enviar');
       return;
     }
@@ -355,7 +357,7 @@ export function FloatingSupportWidget({ open, onOpenChange }: FloatingSupportWid
         ...(ticketSinNit
           ? { sinNit: true }
           : { nit: ticketNit.trim(), ...(!ticketCompany && { nombreEmpresa: ticketNombreEmpresa.trim() }) }),
-        ...(ticketNeedsCaptcha && { turnstileToken: ticketTurnstileToken ?? undefined }),
+        turnstileToken: ticketTurnstileToken,
         titulo: ticketProblema.slice(0, 80),
         descripcion: ticketProblema,
         reporterNombre: ticketNombre,
@@ -652,11 +654,13 @@ export function FloatingSupportWidget({ open, onOpenChange }: FloatingSupportWid
                 />
               </div>
 
+              <Turnstile onVerify={setLiveTurnstileToken} />
+
               {startError && <p className="text-sm text-red-600">{startError}</p>}
 
               <button
                 type="submit"
-                disabled={starting || formNombre.trim().length < 2 || !formMensaje.trim()}
+                disabled={starting || formNombre.trim().length < 2 || !formMensaje.trim() || !liveTurnstileToken}
                 className="w-full rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-50"
               >
                 {starting ? 'Iniciando...' : 'Iniciar chat'}
@@ -782,7 +786,7 @@ export function FloatingSupportWidget({ open, onOpenChange }: FloatingSupportWid
                 />
               </div>
 
-              {ticketNeedsCaptcha && <Turnstile onVerify={setTicketTurnstileToken} />}
+              <Turnstile onVerify={setTicketTurnstileToken} />
 
               {ticketSubmitError && <p className="text-sm text-red-600">{ticketSubmitError}</p>}
 
@@ -792,7 +796,7 @@ export function FloatingSupportWidget({ open, onOpenChange }: FloatingSupportWid
                   ticketSubmitting ||
                   ticketNombre.trim().length < 2 ||
                   ticketProblema.trim().length < 3 ||
-                  (ticketNeedsCaptcha && !ticketTurnstileToken)
+                  !ticketTurnstileToken
                 }
                 className="w-full rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-50"
               >

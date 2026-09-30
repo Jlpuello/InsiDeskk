@@ -3,6 +3,7 @@ import Joi from 'joi';
 import { conversationService } from '../services/conversation.service.js';
 import { companyService } from '../../companies/services/company.service.js';
 import { verifyTurnstileToken } from '../../../shared/security/turnstile.service.js';
+import { assertCompanyPublicRateLimit } from '../../../shared/security/company-rate-limit.js';
 import { AppError } from '../../../shared/utils/error.handler.js';
 import { sanitizeConversation } from '../../../shared/utils/mask.js';
 import { NIT_FORMAT } from '../../../shared/utils/nit.util.js';
@@ -17,15 +18,14 @@ const verifyCompanySchema = Joi.object({
 });
 
 // Mismo criterio que public-ticket.controller.ts: dejar al menos un dato de
-// contacto (email o teléfono), aparte del nombre. nombreEmpresa y
-// turnstileToken solo se usan si verifyCompany dio "encontrada: false" (ver
-// conversation.service.ts#startPublic) — mismo gate anti-abuso que ya tiene
-// la creación de tickets, para que la IA/el bot no puedan generar empresas
-// en masa derivando a chat en vivo.
+// contacto (email o teléfono), aparte del nombre. turnstileToken se exige
+// SIEMPRE (ver start() de abajo) — el NIT no es secreto, así que por sí solo
+// no prueba que quien escribe tiene algo que ver con esa empresa.
+// nombreEmpresa solo se usa si verifyCompany dio "encontrada: false".
 const startSchema = Joi.object({
   nit: nitSchema,
   nombreEmpresa: Joi.string().min(2).max(150).empty(''),
-  turnstileToken: Joi.string().min(1),
+  turnstileToken: Joi.string().min(1).required(),
   contactoNombre: Joi.string().min(2).max(150).required(),
   contactoEmail: Joi.string().email({ tlds: false }).empty(''),
   contactoTelefono: Joi.string().min(5).max(30).empty(''),
@@ -54,11 +54,14 @@ export const ConversationPublicController = {
     const { error, value } = startSchema.validate(req.body);
     if (error) throw new AppError(error.message, 422);
 
+    const verified = await verifyTurnstileToken(value.turnstileToken, req.ip);
+    if (!verified) throw new AppError('No se pudo verificar que sos una persona real — intentá de nuevo', 422);
+
+    await assertCompanyPublicRateLimit(value.nit);
+
     const existing = await companyService.findByNitForPublicVerification(value.nit);
-    if (!existing) {
-      if (!value.nombreEmpresa) throw new AppError('Falta el nombre de tu empresa', 422);
-      const verified = await verifyTurnstileToken(value.turnstileToken, req.ip);
-      if (!verified) throw new AppError('No se pudo verificar que sos una persona real — intentá de nuevo', 422);
+    if (!existing && !value.nombreEmpresa) {
+      throw new AppError('Falta el nombre de tu empresa', 422);
     }
 
     const { conversation, token } = await conversationService.startPublic(value);

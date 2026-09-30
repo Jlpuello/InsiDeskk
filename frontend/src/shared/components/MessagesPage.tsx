@@ -376,6 +376,14 @@ export function MessagesPage() {
           if (!ext) return null;
           return (
             <div className="flex shrink-0 items-center gap-2">
+              {!ext.contactoVerificado && (
+                <span
+                  title="Este contacto no coincide con ninguna cuenta, ticket o conversación previa de esta empresa — verificá antes de tratarlo como un pedido legítimo."
+                  className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700"
+                >
+                  Contacto no verificado
+                </span>
+              )}
               <span
                 className={clsx(
                   'rounded-full px-2 py-0.5 text-[10px] font-medium',

@@ -6,6 +6,9 @@ export interface StartConversationInput {
   // Solo si verifyCompany dio encontrada:false — ver
   // companyService.resolveOrProvisionByNit en el backend.
   nombreEmpresa?: string;
+  // Se exige SIEMPRE, con o sin empresa ya registrada — el NIT no es
+  // secreto, ver conversation-public.controller.ts#start.
+  turnstileToken: string;
   contactoNombre: string;
   contactoEmail?: string;
   contactoTelefono?: string;

@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { Send } from 'lucide-react';
 import { conversationPublicApi } from '../api/conversation-public.api.ts';
 import { connectContactSocket } from '../../../shared/realtime/socket.client.ts';
+import { Turnstile } from '../../../shared/components/Turnstile.tsx';
 import type { ConversationMessage, ConversationMessageEvent } from '../types/conversation.types.ts';
 
 const inputClasses =
@@ -42,6 +43,7 @@ export function PublicChatWidget() {
   const [formEmail, setFormEmail] = useState('');
   const [formTelefono, setFormTelefono] = useState('');
   const [formMensaje, setFormMensaje] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
 
@@ -138,12 +140,17 @@ export function PublicChatWidget() {
       setStartError('Dejá al menos un dato de contacto: email o teléfono');
       return;
     }
+    if (!turnstileToken) {
+      setStartError('Completá la verificación de seguridad antes de enviar.');
+      return;
+    }
 
     setStarting(true);
     setStartError(null);
     try {
       const { token: newToken } = await conversationPublicApi.start({
         nit: nit.trim(),
+        turnstileToken,
         ...(!company && { nombreEmpresa: nombreEmpresa.trim() }),
         contactoNombre: formNombre,
         contactoEmail: formEmail || undefined,
@@ -370,11 +377,13 @@ export function PublicChatWidget() {
               />
             </div>
 
+            <Turnstile onVerify={setTurnstileToken} />
+
             {startError && <p className="text-sm text-red-600">{startError}</p>}
 
             <button
               type="submit"
-              disabled={starting || formNombre.trim().length < 2 || !formMensaje.trim()}
+              disabled={starting || formNombre.trim().length < 2 || !formMensaje.trim() || !turnstileToken}
               className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
               {starting ? 'Iniciando...' : 'Iniciar chat'}

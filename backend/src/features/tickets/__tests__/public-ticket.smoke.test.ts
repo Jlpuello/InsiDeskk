@@ -4,9 +4,13 @@ import { createApp } from '../../../app.js';
 import { getPrismaClient, disconnectPrisma } from '../../../shared/prisma/client.js';
 import { closeRedisClient } from '../../../config/redis.js';
 
-// Smoke test de integración contra la DB/Redis reales de dev — cubre el
-// camino sin Turnstile (NIT ya registrado), que es el que menos fricción
-// tiene y por lo tanto el que más tráfico real recibe.
+// Smoke test de integración contra la DB/Redis reales de dev — Turnstile
+// llama a la API real de Cloudflare (sin mocks acá, a propósito), así que no
+// hay forma de automatizar un token válido (necesita resolver el widget real
+// en un navegador). Por eso este archivo solo puede probar el lado
+// "rechazado" del gate, para las dos rutas — no el éxito con un token
+// legítimo. La creación real se verificó a mano (Playwright) al implementar
+// el cambio.
 describe('POST /api/public/tickets', () => {
   const app = createApp();
   const prisma = getPrismaClient();
@@ -14,7 +18,6 @@ describe('POST /api/public/tickets', () => {
   const nit = String(Date.now()).slice(-10);
   const nombreEmpresa = `Smoke Test Co ${randomUUID()}`;
   let empresaId: string;
-  let ticketId: string | undefined;
 
   beforeAll(async () => {
     const company = await prisma.company.create({ data: { nombre: nombreEmpresa, nit } });
@@ -22,13 +25,15 @@ describe('POST /api/public/tickets', () => {
   });
 
   afterAll(async () => {
-    if (ticketId) await prisma.ticket.delete({ where: { id: ticketId } });
     await prisma.company.delete({ where: { id: empresaId } });
     await disconnectPrisma();
     await closeRedisClient();
   });
 
-  it('crea un ticket sin turnstileToken cuando el NIT ya está registrado', async () => {
+  // El NIT no es secreto (está en cualquier factura) — Turnstile se exige
+  // SIEMPRE, incluso con una empresa ya registrada, para que no sea la única
+  // barrera contra crear tickets a nombre de una empresa ajena.
+  it('rechaza sin turnstileToken aunque el NIT ya esté registrado', async () => {
     const res = await request(app)
       .post('/api/public/tickets')
       .send({
@@ -39,10 +44,7 @@ describe('POST /api/public/tickets', () => {
         reporterEmail: 'smoke@test.local',
       });
 
-    expect(res.status).toBe(201);
-    expect(res.body.data.titulo).toContain('Smoke test');
-    expect(res.body.data.empresaId).toBe(empresaId);
-    ticketId = res.body.data.id;
+    expect(res.status).toBe(422);
   });
 
   it('rechaza sin turnstileToken cuando el NIT NO está registrado (autoprovisión requiere captcha)', async () => {

@@ -5,6 +5,7 @@ import { ticketCategoryService } from '../services/ticket-category.service.js';
 import { companyService } from '../../companies/services/company.service.js';
 import { platformSettingsService } from '../../settings/services/platform-settings.service.js';
 import { verifyTurnstileToken } from '../../../shared/security/turnstile.service.js';
+import { assertCompanyPublicRateLimit } from '../../../shared/security/company-rate-limit.js';
 import { AppError } from '../../../shared/utils/error.handler.js';
 import { sanitizeNestedDevice } from '../../../shared/utils/mask.js';
 import { NIT_FORMAT } from '../../../shared/utils/nit.util.js';
@@ -23,10 +24,10 @@ const verifyCompanySchema = Joi.object({
 // categoría/subcategoría (igual que en el flujo interno) o queda en 'media'.
 //
 // nit deja de ser obligatorio a nivel de schema: sinNit:true (soporte a un
-// particular, sin empresa) es la otra rama válida — la exclusión mutua y los
-// requisitos de turnstileToken se validan a mano en create() de abajo,
-// porque dependen de datos que hay que consultar (si el NIT existe o no),
-// algo que Joi no puede resolver por sí solo con un .when().
+// particular, sin empresa) es la otra rama válida — la exclusión mutua se
+// valida a mano en create() de abajo, porque depende de datos que hay que
+// consultar (si el NIT existe o no), algo que Joi no puede resolver por sí
+// solo con un .when().
 //
 // nombreEmpresa es opcional y solo se usa cuando el NIT no matcheó ninguna
 // Company existente (ver companyService.resolveOrProvisionByNit).
@@ -34,11 +35,12 @@ const publicCreateTicketSchema = Joi.object({
   sinNit: Joi.boolean(),
   nit: nitPattern,
   nombreEmpresa: Joi.string().min(2).max(150).empty(''),
-  // Token del widget de Cloudflare Turnstile — requerido solo en los
-  // caminos que autoprovisionan una empresa o usan la empresa por defecto
-  // (ver create() y turnstile.service.ts). El camino de NIT ya registrado no
-  // lo necesita.
-  turnstileToken: Joi.string().min(1),
+  // Token del widget de Cloudflare Turnstile — se exige SIEMPRE, incluso con
+  // un NIT ya registrado: el NIT no es un secreto (está en cualquier
+  // factura), así que por sí solo no prueba que quien reporta tiene algo
+  // que ver con esa empresa. Turnstile prueba "sos una persona, no un bot" en
+  // los tres caminos por igual (ver resolveEmpresaIdForPublicTicket).
+  turnstileToken: Joi.string().min(1).required(),
   titulo: Joi.string().min(3).max(255).required(),
   descripcion: Joi.string().min(3),
   categoriaId: Joi.string().uuid().empty(''),
@@ -50,18 +52,21 @@ const publicCreateTicketSchema = Joi.object({
   .or('reporterEmail', 'reporterTelefono')
   .messages({ 'object.missing': 'Dejá al menos un dato de contacto: email o teléfono' });
 
-// Resuelve a qué empresa queda el ticket, y exige Turnstile en los dos
-// caminos que autoprovisionan/usan una empresa compartida — el único camino
-// sin captcha es un NIT que YA matchea una empresa real.
+// Resuelve a qué empresa queda el ticket. Turnstile se verifica UNA vez acá
+// arriba, siempre, antes de cualquier otra cosa — no solo en los caminos que
+// autoprovisionan/usan la empresa por defecto (ver comentario en el schema).
+// El límite por empresa (además del límite por IP que ya cubre app.ts) se
+// aplica solo cuando hay un NIT real de por medio: "sin NIT" ya tiene su
+// propio candado (Turnstile + empresa por defecto), no hace falta otro.
 async function resolveEmpresaIdForPublicTicket(
   value: { sinNit?: boolean; nit?: string; nombreEmpresa?: string; turnstileToken?: string },
   requestIp: string | undefined,
 ): Promise<string> {
+  const verified = await verifyTurnstileToken(value.turnstileToken, requestIp);
+  if (!verified) throw new AppError('No se pudo verificar que sos una persona real — intentá de nuevo', 422);
+
   if (value.sinNit) {
     if (value.nit) throw new AppError('No se puede indicar un NIT y "sin NIT" al mismo tiempo', 422);
-
-    const verified = await verifyTurnstileToken(value.turnstileToken, requestIp);
-    if (!verified) throw new AppError('No se pudo verificar que sos una persona real — intentá de nuevo', 422);
 
     const defaultCompanyId = await platformSettingsService.getDefaultCompanyId();
     if (!defaultCompanyId) {
@@ -72,12 +77,11 @@ async function resolveEmpresaIdForPublicTicket(
 
   if (!value.nit) throw new AppError('Falta el NIT (o indicá que no tenés uno)', 422);
 
-  const existing = await companyService.findByNitForPublicVerification(value.nit);
-  if (!existing) {
-    if (!value.nombreEmpresa) throw new AppError('Falta el nombre de tu empresa', 422);
+  await assertCompanyPublicRateLimit(value.nit);
 
-    const verified = await verifyTurnstileToken(value.turnstileToken, requestIp);
-    if (!verified) throw new AppError('No se pudo verificar que sos una persona real — intentá de nuevo', 422);
+  const existing = await companyService.findByNitForPublicVerification(value.nit);
+  if (!existing && !value.nombreEmpresa) {
+    throw new AppError('Falta el nombre de tu empresa', 422);
   }
 
   const company = await companyService.resolveOrProvisionByNit(value.nit, value.nombreEmpresa);

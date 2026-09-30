@@ -37,10 +37,11 @@ interface TurnstileProps {
   onVerify: (token: string) => void;
 }
 
-// Widget de verificación anti-bot para los caminos públicos que
-// autoprovisionan una empresa o usan la empresa por defecto (ver
-// public-ticket.controller.ts) — sin site key configurada, muestra un aviso
-// en vez de un widget roto.
+// Widget de verificación anti-bot — se exige en TODOS los caminos públicos
+// de tickets/chat (con o sin NIT ya registrado, ver public-ticket.controller.ts
+// y conversation-public.controller.ts: el NIT no es secreto, así que por sí
+// solo no prueba identidad). Sin site key configurada, muestra un aviso en
+// vez de un widget roto.
 export function Turnstile({ onVerify }: TurnstileProps) {
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
   const containerRef = useRef<HTMLDivElement>(null);

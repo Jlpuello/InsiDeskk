@@ -10,6 +10,7 @@ import { eventEmitter } from '../../../shared/events/event.emitter.js';
 import { AppError, NotFoundError } from '../../../shared/utils/error.handler.js';
 import { logger } from '../../../shared/utils/logger.js';
 import { env } from '../../../config/env.js';
+import { isKnownCompanyContact } from '../../../shared/security/contact-verification.js';
 
 export interface StartConversationInput {
   nit: string;
@@ -48,6 +49,7 @@ export class ConversationService {
   // acá nunca más se puede recuperar (mismo criterio que una contraseña).
   async startPublic(input: StartConversationInput): Promise<{ conversation: Conversation; token: string }> {
     const company = await companyService.resolveOrProvisionByNit(input.nit, input.nombreEmpresa);
+    const contactoVerificado = await isKnownCompanyContact(company.id, input.contactoEmail, input.contactoTelefono);
 
     const { token, tokenHash } = conversationTokenService.generate();
 
@@ -56,6 +58,7 @@ export class ConversationService {
       contactoNombre: input.contactoNombre,
       contactoEmail: input.contactoEmail,
       contactoTelefono: input.contactoTelefono,
+      contactoVerificado,
       tokenHash,
     });
 
