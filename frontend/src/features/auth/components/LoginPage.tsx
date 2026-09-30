@@ -9,7 +9,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const setSession = useAuthStore((state) => state.setSession);
 
-  const [email, setEmail] = useState('admin@empresa.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -76,8 +76,8 @@ export function LoginPage() {
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
 
-          <p className="mt-4 text-xs text-gray-500">
-            Prueba con: admin@empresa.com / tecnico@empresa.com / cliente@empresa.com
+          <p className="mt-4 text-center text-gray-500 ">
+            © 2026 InsiDesk
           </p>
         </form>
 
