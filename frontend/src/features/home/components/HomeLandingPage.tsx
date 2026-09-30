@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
-import { Boxes, Building2, Laptop, Mail, MessageCircle, Phone, Receipt, Ticket } from 'lucide-react';
+import { Boxes, Building2, Laptop, LogIn, Mail, MessageCircle, Phone, Receipt, Ticket } from 'lucide-react';
 import { PublicGradientBackdrop } from '../../../shared/components/PublicGradientBackdrop.tsx';
 import { SoftGradientBackdrop } from '../../../shared/components/SoftGradientBackdrop.tsx';
 import { organizationPublicApi, type OrganizationPublicInfo } from '../../../shared/api/organization-public.api.ts';
@@ -78,11 +78,14 @@ export function HomeLandingPage() {
     >
       {/* Acceso persistente a /login — antes, si algo fallaba o se entraba
           por un link directo a la sección 2/3, el único camino de vuelta era
-          el botón del hero en la sección 1. */}
+          el botón del hero en la sección 1. Color de marca sólido (no la
+          píldora oscura translúcida del dot-nav) a propósito: tiene que
+          leerse como un botón de acción, no como una etiqueta decorativa. */}
       <Link
         to="/login"
-        className="fixed right-4 top-4 z-30 rounded-full bg-slate-900/70 px-4 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur transition-colors hover:bg-slate-900/90 sm:text-sm"
+        className="fixed right-4 top-4 z-30 flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-1 ring-white/20 transition-colors hover:bg-blue-700 sm:px-5 sm:text-base"
       >
+        <LogIn size={16} />
         Iniciar sesión
       </Link>
 
