@@ -20,6 +20,7 @@ remotelyRoutes.get('/agent-script/:companyId', authorize('admin'), asyncHandler(
 // arbitrario en el equipo, no un script fijo de diagnóstico como los scans.
 const remoteConnect = requirePermission('devices:remote-connect');
 remotelyRoutes.post('/connect/:id', remoteConnect, asyncHandler(RemotelyController.connect));
+remotelyRoutes.post('/attended-connect', remoteConnect, asyncHandler(RemotelyController.attendedConnect));
 remotelyRoutes.post('/execute-script', requirePermission('devices:remote-script'), asyncHandler(RemotelyController.executeScript));
 remotelyRoutes.post('/hardware-scan/:id', remoteConnect, asyncHandler(RemotelyController.hardwareScan));
 remotelyRoutes.post('/network-scan/:id', remoteConnect, asyncHandler(RemotelyController.networkScan));

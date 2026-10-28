@@ -2,10 +2,8 @@ import type { Conversation, ConversationMessage, ConversationStatus } from '@pri
 import { conversationRepository } from '../repositories/conversation.repository.js';
 import { conversationTokenService } from './conversation-token.service.js';
 import { companyService } from '../../companies/services/company.service.js';
-import { companyRepository } from '../../companies/repositories/company.repository.js';
 import { userRepository } from '../../users/repositories/user.repository.js';
 import { whatsappClientService } from '../../whatsapp/services/whatsapp-client.service.js';
-import { remotelyService } from '../../remotely/services/remotely.service.js';
 import { eventEmitter } from '../../../shared/events/event.emitter.js';
 import { AppError, NotFoundError } from '../../../shared/utils/error.handler.js';
 import { logger } from '../../../shared/utils/logger.js';
@@ -188,31 +186,24 @@ export class ConversationService {
     return message;
   }
 
-  // Le manda al contacto externo un link temporal (24h) para que se baje el
-  // instalador del agente de soporte remoto de SU empresa, sin necesitar
-  // cuenta (ver remotelyService.createInstallerLink). Es solo texto con una
-  // URL — se manda con postMessageStaff de arriba para heredar gratis el
-  // guardado, el socket y el reenvío por WhatsApp si corresponde.
-  async sendAgentInstallerLink(conversationId: string, staffUserId: string): Promise<ConversationMessage> {
-    const conversation = await this.getById(conversationId);
+  // Le manda al contacto externo un link para que se baje el ejecutable
+  // PORTÁTIL de Remotely (no instala nada, solo muestra un código de sesión en
+  // pantalla) — reemplaza al viejo link de instalador permanente, que se quitó
+  // por seguridad: instalar un agente persistente debe quedar SIEMPRE en manos
+  // de un técnico/admin (ver AgentsPage, ruta autenticada admin-only), nunca
+  // como una acción que un contacto externo dispara solo con abrir un link de
+  // chat. El link apunta a nuestro dominio (no al servidor de Remotely
+  // directo, ver remotely-public.controller.ts#portableDownload) — se manda
+  // con postMessageStaff de arriba para heredar gratis el guardado, el socket
+  // y el reenvío por WhatsApp si corresponde.
+  async sendPortableConnectLink(conversationId: string, staffUserId: string): Promise<ConversationMessage> {
+    await this.getById(conversationId);
     if (!env.apiPublicUrl) {
       throw new AppError('Falta configurar API_PUBLIC_URL para poder generar el link', 422);
     }
 
-    // Chequeo liviano de que la empresa exista (companyRepository directo,
-    // no companyService.getById: ese aplica scoping y rechazaría a un
-    // tecnico cuya empresa no es la de la conversación — acá el acceso es
-    // abierto entre admin/tecnico, igual que el resto de conversaciones). NO
-    // se exige remotelyGroupId acá: puede ser una empresa autogenerada por
-    // NIT/WhatsApp sin mapear todavía, o derechamente soporte a un usuario
-    // particular sin empresa real de por medio — el instalador funciona
-    // igual sin grupo (ver buildAgentScriptInfo, requireGroup:false).
-    const company = await companyRepository.findById(conversation.empresaId);
-    if (!company) throw new NotFoundError('Empresa');
-
-    const token = await remotelyService.createInstallerLink(conversation.empresaId);
-    const url = `${env.apiPublicUrl.replace(/\/+$/, '')}/api/public/remotely/agent-installer/${token}`;
-    const mensaje = `Para brindarte soporte remoto, instalá esta herramienta: ${url}\n\nEl link vence en 24 horas.`;
+    const url = `${env.apiPublicUrl.replace(/\/+$/, '')}/api/public/remotely/portable-download`;
+    const mensaje = `Para brindarte soporte remoto, abrí este link y ejecutá la aplicación (no instala nada): ${url}\n\nVa a mostrarte un código en pantalla — pasáselo al técnico para conectarse.`;
 
     return this.postMessageStaff(conversationId, staffUserId, mensaje);
   }

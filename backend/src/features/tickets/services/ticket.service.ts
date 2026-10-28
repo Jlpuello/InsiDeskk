@@ -292,6 +292,45 @@ export class TicketService {
     return stats;
   }
 
+  // Gráfico de barras del Dashboard — mismo cache que getStats (misma key
+  // base, se invalida junto con la lista).
+  async getPriorityBreakdown(empresaIdInput?: string): Promise<Record<TicketPriority, number>> {
+    const empresaId = resolveEmpresaId(empresaIdInput);
+    const cacheKey = CacheKeys.ticketsList(empresaId ?? 'all', 'stats-priority');
+
+    const cached = await cacheService.get<Record<TicketPriority, number>>(cacheKey);
+    if (cached) return cached;
+
+    const byPrioridad = await ticketRepository.countByPriority(empresaId);
+    await cacheService.set(cacheKey, byPrioridad, env.cacheTicketsTtl);
+    return byPrioridad;
+  }
+
+  // Gráfico de tendencia del Dashboard — rellena con 0 los días sin tickets
+  // (countByDay del repositorio solo trae los que sí tuvieron) para que el
+  // front siempre reciba exactamente `days` puntos, uno por día, sin huecos.
+  async getTicketTrend(empresaIdInput?: string, days = 14): Promise<{ date: string; count: number }[]> {
+    const empresaId = resolveEmpresaId(empresaIdInput);
+    const cacheKey = CacheKeys.ticketsList(empresaId ?? 'all', `stats-trend-${days}`);
+
+    const cached = await cacheService.get<{ date: string; count: number }[]>(cacheKey);
+    if (cached) return cached;
+
+    const rows = await ticketRepository.countByDay(empresaId, days);
+    const byDate = new Map(rows.map((r) => [r.date, r.count]));
+
+    const trend: { date: string; count: number }[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() - i);
+      const date = d.toISOString().slice(0, 10);
+      trend.push({ date, count: byDate.get(date) ?? 0 });
+    }
+
+    await cacheService.set(cacheKey, trend, env.cacheTicketsTtl);
+    return trend;
+  }
+
   async getTicketById(id: string) {
     const ticket = await ticketRepository.findById(id);
     if (!ticket) throw new NotFoundError('Ticket');

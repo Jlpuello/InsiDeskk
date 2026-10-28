@@ -15,7 +15,8 @@ export type CriticalAction =
   | 'TICKET_DELETE'
   | 'DEVICE_DELETE'
   | 'COMPANY_DEACTIVATE'
-  | 'USER_DELETE';
+  | 'USER_DELETE'
+  | 'TWO_FACTOR_RESET';
 
 export async function recordCriticalAction(input: {
   accion: CriticalAction;

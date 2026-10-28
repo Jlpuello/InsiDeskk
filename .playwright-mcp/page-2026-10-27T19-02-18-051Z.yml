@@ -1,0 +1,21 @@
+- generic [ref=e3]:
+  - paragraph [ref=e7]: Soporte remoto en minutos
+  - paragraph [ref=e12]: Equipo certificado
+  - paragraph [ref=e17]: Disponibilidad 24/7
+  - paragraph [ref=e24]: Atención personalizada
+  - generic [ref=e26]:
+    - link "InsiDesk Mesa de ayuda" [ref=e27] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e31]:
+        - generic [ref=e32]: InsiDesk
+        - generic [ref=e33]: Mesa de ayuda
+    - generic [ref=e34]:
+      - button "Volver" [ref=e44] [cursor=pointer]
+      - heading "Verificación en dos pasos" [level=1] [ref=e47]
+      - paragraph [ref=e48]: Ingresá el código de tu app autenticadora, o un código de respaldo.
+      - textbox "000000" [active] [ref=e49]
+      - button "Verificar" [disabled] [ref=e50]
+    - paragraph [ref=e42]:
+      - text: ¿Necesitás ayuda y no tenés cuenta?
+      - link "Pedir soporte" [ref=e43] [cursor=pointer]:
+        - /url: /soporte

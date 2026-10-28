@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Ticket } from 'lucide-react';
+import { ArrowLeft, Ticket } from 'lucide-react';
 import { authApi } from '../api/auth.api.ts';
 import { useAuthStore } from '../store/auth.store.ts';
 import { PublicGradientBackdrop } from '../../../shared/components/PublicGradientBackdrop.tsx';
@@ -14,20 +14,53 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Si el usuario tiene 2FA activo, login() no entra directo — pide el
+  // código en un segundo paso (ver authApi.loginTwoFactor). pendingToken
+  // nunca se guarda en localStorage/el store: vive solo en memoria mientras
+  // dura este paso intermedio.
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
+  const [code, setCode] = useState('');
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const { user } = await authApi.login(email, password);
-      setSession(user);
-      navigate('/tickets');
+      const result = await authApi.login(email, password);
+      if (result.requiresTwoFactor) {
+        setPendingToken(result.pendingToken!);
+      } else {
+        setSession(result.user!);
+        navigate('/tickets');
+      }
     } catch {
       setError('Credenciales inválidas');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSubmitCode(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const { user } = await authApi.loginTwoFactor(pendingToken!, code.trim());
+      setSession(user);
+      navigate('/tickets');
+    } catch {
+      setError('Código incorrecto');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleBackToCredentials() {
+    setPendingToken(null);
+    setCode('');
+    setError(null);
   }
 
   return (
@@ -45,41 +78,75 @@ export function LoginPage() {
           </span>
         </Link>
 
-        <form onSubmit={handleSubmit} className="w-full rounded-xl border border-white/10 bg-white p-8 shadow-xl">
-          <h1 className="mb-6 text-lg font-semibold text-gray-900">Iniciar sesión</h1>
+        {pendingToken ? (
+          <form onSubmit={handleSubmitCode} className="w-full rounded-xl border border-white/10 bg-white p-8 shadow-xl">
+            <button
+              type="button"
+              onClick={handleBackToCredentials}
+              className="mb-4 flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600"
+            >
+              <ArrowLeft size={13} /> Volver
+            </button>
+            <h1 className="mb-1 text-lg font-semibold text-gray-900">Verificación en dos pasos</h1>
+            <p className="mb-6 text-sm text-gray-500">Ingresá el código de tu app autenticadora, o un código de respaldo.</p>
 
-          <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-          />
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              required
+              autoFocus
+              placeholder="000000"
+              className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 text-center font-mono text-lg tracking-widest focus:border-blue-500 focus:outline-none"
+            />
 
-          <label className="mb-1 block text-sm font-medium text-gray-700">Contraseña</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-          />
+            {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
-          {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading || !code.trim()}
+              className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? 'Verificando...' : 'Verificar'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="w-full rounded-xl border border-white/10 bg-white p-8 shadow-xl">
+            <h1 className="mb-6 text-lg font-semibold text-gray-900">Iniciar sesión</h1>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Ingresando...' : 'Ingresar'}
-          </button>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            />
 
-          <p className="mt-4 text-center text-gray-500 ">
-            © 2026 InsiDesk
-          </p>
-        </form>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Contraseña</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            />
+
+            {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? 'Ingresando...' : 'Ingresar'}
+            </button>
+
+            <p className="mt-4 text-center text-gray-500 ">
+              © 2026 InsiDesk
+            </p>
+          </form>
+        )}
 
         <p className="mt-5 text-center text-xs text-blue-100">
           ¿Necesitás ayuda y no tenés cuenta?{' '}

@@ -23,6 +23,13 @@ export const remotelyApi = {
     return data.data;
   },
 
+  // Conexión ad-hoc por código (equipo sin registrar en Inventario) — ver
+  // RemoteConnectPage.
+  async attendedConnect(sessionId: string): Promise<StartSessionResult> {
+    const { data } = await apiClient.post<{ data: StartSessionResult }>('/remotely/attended-connect', { sessionId });
+    return data.data;
+  },
+
   async executeScript(
     deviceId: string,
     shell: 'powershell' | 'bash' | 'cmd',

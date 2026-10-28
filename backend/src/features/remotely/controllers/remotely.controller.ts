@@ -5,6 +5,7 @@ import { remotelySessionRepository } from '../repositories/remotely-session.repo
 import { scriptExecutionRepository } from '../repositories/script-execution.repository.js';
 import { deviceService } from '../../devices/index.js';
 import { AppError } from '../../../shared/utils/error.handler.js';
+import { logger } from '../../../shared/utils/logger.js';
 import { formatHardwareScan, formatNetworkScan, maskRemotelySession } from '../../../shared/utils/mask.js';
 import { HARDWARE_SCAN_SCRIPT, parseHardwareScanResult } from '../scripts/hardware-scan.script.js';
 import { NETWORK_SCAN_SCRIPT, parseNetworkScanResult } from '../scripts/network-scan.script.js';
@@ -13,6 +14,10 @@ import type { ExecuteScriptResult } from '../types/remotely.types.js';
 
 const connectSchema = Joi.object({
   ticketId: Joi.string().uuid(),
+});
+
+const attendedConnectSchema = Joi.object({
+  sessionId: Joi.string().trim().min(1).max(100).required(),
 });
 
 const executeScriptSchema = Joi.object({
@@ -79,6 +84,25 @@ export const RemotelyController = {
     });
 
     res.status(201).json({ data: session });
+  },
+
+  // Conexión ad-hoc a un equipo NO registrado en Inventario: el contacto
+  // corrió el ejecutable portátil (ver conversationService.sendPortableConnectLink)
+  // y le dictó al técnico el código que le muestra en pantalla. A diferencia
+  // de connect() de arriba, acá no hay deviceId local — no se persiste en
+  // remotely_sessions (esa tabla exige un Device real, ver schema.prisma) ni
+  // se llama a la API de Remotely, solo se arma la URL del visor (ver
+  // buildAttendedViewerUrl) — se deja un log para trazabilidad básica.
+  async attendedConnect(req: Request, res: Response): Promise<void> {
+    const { error, value } = attendedConnectSchema.validate(req.body);
+    if (error) throw new AppError(error.message, 422);
+
+    const joinUrl = await remotelyService.buildAttendedViewerUrl(value.sessionId);
+    logger.info('Conexión remota ad-hoc por código iniciada', { userId: req.user!.id, sessionId: value.sessionId });
+
+    // Misma forma { joinUrl } que connect() arriba (StartSessionResult) — así
+    // el frontend reusa el mismo tipo para ambos flujos de conexión.
+    res.status(200).json({ data: { joinUrl } });
   },
 
   async executeScript(req: Request, res: Response): Promise<void> {

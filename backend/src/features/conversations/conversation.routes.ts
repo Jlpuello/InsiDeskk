@@ -15,6 +15,6 @@ conversationRoutes.get('/', asyncHandler(ConversationController.list));
 conversationRoutes.get('/unread-count', asyncHandler(ConversationController.unreadCount));
 conversationRoutes.get('/:id/messages', asyncHandler(ConversationController.getMessages));
 conversationRoutes.post('/:id/messages', asyncHandler(ConversationController.postMessage));
-conversationRoutes.post('/:id/agent-installer-link', asyncHandler(ConversationController.sendAgentInstallerLink));
+conversationRoutes.post('/:id/portable-connect-link', asyncHandler(ConversationController.sendPortableConnectLink));
 conversationRoutes.put('/:id/assign', asyncHandler(ConversationController.assign));
 conversationRoutes.put('/:id/estado', asyncHandler(ConversationController.setEstado));

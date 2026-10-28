@@ -1,0 +1,89 @@
+- generic [ref=f5e3]:
+  - complementary [ref=f5e4]:
+    - generic [ref=f5e10]:
+      - paragraph [ref=f5e11]: InsiDesk
+      - paragraph [ref=f5e12]: Mesa de ayuda
+    - navigation [ref=f5e13]:
+      - generic [ref=f5e14]:
+        - paragraph [ref=f5e15]: Operación
+        - link "Dashboard" [ref=f5e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=f5e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=f5e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=f5e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=f5e32]:
+        - paragraph [ref=f5e33]: Recursos
+        - link "Dispositivos" [ref=f5e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=f5e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=f5e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=f5e51]:
+        - paragraph [ref=f5e52]: Comercial
+        - link "Cotizaciones" [ref=f5e53] [cursor=pointer]:
+          - /url: /quotes
+  - generic [ref=f5e57]:
+    - banner [ref=f5e58]:
+      - generic [ref=f5e59]:
+        - button "Mensajes" [ref=f5e61] [cursor=pointer]:
+          - generic [ref=f5e94]: "1"
+        - button "Notificaciones" [ref=f5e65] [cursor=pointer]:
+          - generic [ref=f5e95]: "2"
+        - button "J Juan Técnico" [ref=f5e71] [cursor=pointer]:
+          - generic [ref=f5e72]: J
+          - generic [ref=f5e73]:
+            - paragraph [ref=f5e74]: Juan
+            - paragraph [ref=f5e75]: Técnico
+    - main [ref=f5e76]:
+      - generic [ref=f5e77]:
+        - generic [ref=f5e78]:
+          - heading "Inventario" [level=1] [ref=f5e79]
+          - generic [ref=f5e80]:
+            - generic [ref=f5e81]:
+              - button "Lista" [ref=f5e82] [cursor=pointer]
+              - button "Mapa" [active] [ref=f5e83] [cursor=pointer]
+            - button "Exportar" [ref=f5e84] [cursor=pointer]
+            - button "Nuevo equipo" [ref=f5e88] [cursor=pointer]
+        - generic [ref=f5e90]:
+          - textbox "Buscar por nombre, marca, modelo, ubicación..." [ref=f5e91]
+          - combobox [ref=f5e92]:
+            - option "Todo tipo" [selected]
+            - option "PC (agente)"
+            - option "Router"
+            - option "Switch"
+            - option "Access Point"
+            - option "Impresora"
+            - option "DVR"
+            - option "Cámara IP"
+            - option "Control de acceso"
+        - generic [ref=f5e143]:
+          - generic [ref=f5e144]:
+            - generic [ref=f5e145]: Tipo
+            - generic [ref=f5e146]:
+              - generic [ref=f5e147]: RT
+              - text: Router
+            - generic [ref=f5e148]:
+              - generic [ref=f5e149]: PC
+              - text: Equipo con agente
+            - generic [ref=f5e151]: Estado
+            - generic [ref=f5e152]: Activo
+            - generic [ref=f5e154]: Fuera de línea
+          - generic [ref=f5e157]:
+            - generic [ref=f5e158]: Red de IMPORMAR
+            - generic [ref=f5e168]:
+              - button "microtick microtick · mcd-34gh4" [ref=f5e171] [cursor=pointer]:
+                - generic [ref=f5e177]:
+                  - generic [ref=f5e178]: microtick
+                  - generic [ref=f5e179]: microtick · mcd-34gh4
+              - button "EQUIPOJL Windows · Microsoft Windows 10.0.26100" [ref=f5e182] [cursor=pointer]:
+                - generic [ref=f5e186]:
+                  - generic [ref=f5e187]: EQUIPOJL
+                  - generic [ref=f5e188]: Windows · Microsoft Windows 10.0.26100
+              - button "PC Cliente 1 Windows · 11 Pro" [ref=f5e191] [cursor=pointer]:
+                - generic [ref=f5e195]:
+                  - generic [ref=f5e196]: PC Cliente 1
+                  - generic [ref=f5e197]: Windows · 11 Pro

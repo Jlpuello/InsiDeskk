@@ -33,26 +33,17 @@ export const RemotelyPublicController = {
     res.status(204).send();
   },
 
-  // Link temporal (24h, ver remotelyService.createInstallerLink) que un
-  // staff manda por chat a un contacto externo para que se baje el .bat de
-  // SU empresa sin necesitar cuenta — mismo criterio de "sin auth" que
-  // hardenReport arriba, acotado por el token en vez de por sesión.
-  async agentInstaller(req: Request, res: Response): Promise<void> {
-    const companyId = await remotelyService.resolveInstallerToken(req.params.token);
-    if (!companyId) {
-      res.status(404).type('text/plain').send('Este link venció o no es válido — pedile uno nuevo al técnico.');
-      return;
-    }
-
-    const info = await remotelyService.buildAgentScriptInfo(companyId, { requireGroup: false });
-    // Content-Disposition no tolera bien acentos/espacios/comillas en el
-    // nombre de archivo — se sanitiza, el nombre "lindo" ya está dentro del
-    // propio .bat si hiciera falta mostrarlo.
-    const safeName = info.companyName.replace(/[^a-zA-Z0-9-]+/g, '-');
-    res
-      .status(200)
-      .type('application/octet-stream')
-      .set('Content-Disposition', `attachment; filename="instalar-agente-${safeName}.bat"`)
-      .send(info.windows.batContent);
+  // Redirect al ejecutable portátil real de Remotely (sin auth también del
+  // lado de Remotely, ver buildPortableDownloadUrl) — el link que un staff
+  // manda por chat apunta acá (nuestro dominio) en vez de al servidor de
+  // Remotely directo, mismo criterio de indirección que el resto de los
+  // links públicos de este archivo. No requiere token: a diferencia del
+  // instalador que reemplaza (que instalaba un servicio permanente y por eso
+  // se quitó de este flujo por seguridad), este ejecutable no instala nada —
+  // es el mismo archivo público que Remotely ya serviría sin auth si se le
+  // pegara directo.
+  async portableDownload(_req: Request, res: Response): Promise<void> {
+    const url = await remotelyService.buildPortableDownloadUrl();
+    res.redirect(302, url);
   },
 };

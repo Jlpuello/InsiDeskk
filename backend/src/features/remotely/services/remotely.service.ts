@@ -1,5 +1,4 @@
 import axios, { type AxiosInstance } from 'axios';
-import crypto from 'node:crypto';
 import type { OperatingSystem } from '@prisma/client';
 import { AppError, NotFoundError } from '../../../shared/utils/error.handler.js';
 import { logger } from '../../../shared/utils/logger.js';
@@ -27,10 +26,6 @@ import type {
 
 const DEVICE_STATUS_CACHE_TTL = 60;
 const DEVICE_TELEMETRY_CACHE_TTL = 60;
-// El link público de instalador (ver createInstallerLink/resolveInstallerToken)
-// vence a las 24h — tiempo de sobra para que un contacto externo lo abra
-// desde el chat, sin quedar utilizable indefinidamente.
-const INSTALLER_LINK_TTL = 24 * 60 * 60;
 // Los grupos de Remotely los administra el usuario a mano desde Remotely
 // mismo — no cambian cada pocos segundos como el status, así que un TTL más
 // largo evita pegarle a /api/OrganizationManagement/DeviceGroup en cada
@@ -157,27 +152,19 @@ export class RemotelyService {
     return new Map(Object.entries(asRecord));
   }
 
-  // Arma toda la info de instalación del agente para una empresa (comandos +
-  // .bat con endurecimiento embebido, ver scripts/agent-deploy.util.ts) —
-  // usado tanto por la ruta autenticada de "Agentes" (RemotelyController.agentScript,
-  // requireGroup:true — ahí es un admin gestionando una empresa conocida,
-  // vale la pena pedirle que la mapee primero) como por el link temporal
-  // enviado desde una conversación (conversationService.sendAgentInstallerLink,
-  // requireGroup:false — puede ser una empresa recién autogenerada por NIT/
-  // WhatsApp, o directamente soporte a un usuario particular sin empresa de
-  // por medio; el instalador funciona igual, solo queda sin grupo asignado
-  // en Remotely hasta que alguien lo organice a mano).
-  async buildAgentScriptInfo(companyId: string, opts: { requireGroup?: boolean } = {}): Promise<AgentScriptInfo> {
-    const requireGroup = opts.requireGroup ?? true;
-
-    // companyRepository directo (no companyService.getById) a propósito: ese
-    // asume un llamador autenticado y aplica scoping por empresa — acá se
-    // usa también desde la ruta pública del link temporal (sin usuario), que
-    // ya está autorizada por el token; la ruta autenticada de "Agentes" es
-    // admin-only a nivel de router, así que tampoco necesita ese chequeo.
+  // Arma toda la info de instalación del agente PERMANENTE para una empresa
+  // (comandos + .bat con endurecimiento embebido, ver scripts/agent-deploy.util.ts)
+  // — usado solo por la ruta autenticada de "Agentes" (RemotelyController.agentScript,
+  // admin-only a nivel de router), un admin gestionando una empresa conocida,
+  // por eso vale la pena pedirle que la mapee a un grupo de Remotely primero.
+  // El viejo link público que mandaba esto mismo por chat a un contacto
+  // externo se quitó por seguridad (instalar un agente permanente debe quedar
+  // siempre en manos de un técnico/admin) — ver conversationService.sendPortableConnectLink,
+  // que manda el ejecutable portátil en su lugar (buildPortableDownloadUrl).
+  async buildAgentScriptInfo(companyId: string): Promise<AgentScriptInfo> {
     const company = await companyRepository.findById(companyId);
     if (!company) throw new NotFoundError('Empresa');
-    if (requireGroup && !company.remotelyGroupId) {
+    if (!company.remotelyGroupId) {
       throw new AppError('Esta empresa no tiene un grupo de Remotely mapeado — configuralo en Empresas.', 422);
     }
 
@@ -216,19 +203,39 @@ export class RemotelyService {
     };
   }
 
-  // Link público temporal para que un contacto EXTERNO (sin cuenta) se baje
-  // el instalador de su empresa desde el chat — ver
-  // conversationService.sendAgentInstallerLink y remotely-public.controller.ts.
-  // Token opaco en Redis en vez de una tabla nueva: mismo criterio que
-  // cualquier otro valor de corta vida que ya vive en cache (ver rate-limiter.ts).
-  async createInstallerLink(companyId: string): Promise<string> {
-    const token = crypto.randomBytes(24).toString('hex');
-    await cacheService.set(`agent-installer-token:${token}`, companyId, INSTALLER_LINK_TTL);
-    return token;
+  // URL pública (sin auth, confirmado contra ClientDownloadsController.GetDesktop
+  // del código fuente de Remotely) del ejecutable portátil "Remotely_Desktop" —
+  // a diferencia del instalador (buildAgentScriptInfo), no instala nada ni deja
+  // un servicio corriendo: el contacto lo abre, ve un código de sesión en
+  // pantalla y listo. Pensado para soporte puntual a un equipo SIN el agente
+  // permanente instalado (walk-in, empresa default/sin contrato) — no necesita
+  // companyId ni grupo, solo el organizationId único de la cuenta de Remotely.
+  // Se usa desde conversationService.sendPortableConnectLink.
+  async buildPortableDownloadUrl(): Promise<string> {
+    const [{ remotelyServerUrl }, organizationId] = await Promise.all([
+      platformSettingsService.getPublic(),
+      this.getOrganizationId(),
+    ]);
+    if (!remotelyServerUrl) {
+      throw new AppError('No hay un servidor de Remotely configurado — configuralo en Configuración.', 422);
+    }
+    return `${remotelyServerUrl.replace(/\/+$/, '')}/api/ClientDownloads/desktop/WindowsDesktop-x64/${organizationId}`;
   }
 
-  async resolveInstallerToken(token: string): Promise<string | null> {
-    return cacheService.get<string>(`agent-installer-token:${token}`);
+  // Arma la URL del visor de Remotely para una sesión "atendida" iniciada por
+  // el propio contacto con el ejecutable portátil de arriba (que le muestra un
+  // código en pantalla) — confirmado contra Desktop.UI/ViewModels/MainViewViewModel.cs
+  // (CopyLink arma exactamente `{host}/Viewer?sessionId={code}`, sin
+  // OTP/accessKey como sí lleva el flujo de dispositivo registrado, ver
+  // startSession). Por eso, a diferencia de startSession, esto no autentica
+  // nada por sí solo — el técnico que lo abre necesita tener su propia sesión
+  // de Remotely iniciada en el navegador.
+  async buildAttendedViewerUrl(sessionCode: string): Promise<string> {
+    const { remotelyServerUrl } = await platformSettingsService.getPublic();
+    if (!remotelyServerUrl) {
+      throw new AppError('No hay un servidor de Remotely configurado — configuralo en Configuración.', 422);
+    }
+    return `${remotelyServerUrl.replace(/\/+$/, '')}/Viewer?sessionId=${encodeURIComponent(sessionCode)}`;
   }
 
   // Mapa deviceGroupID de Remotely → id de Company nuestra (Company.remotelyGroupId,
@@ -525,7 +532,19 @@ export class RemotelyService {
   private handleError(err: unknown, message: string): never {
     if (axios.isAxiosError(err)) {
       logger.error(`${message}: ${err.message}`, { response: err.response?.data, status: err.response?.status });
-      throw new AppError(message, err.response?.status ?? 502);
+      // 401/403 acá significa que NUESTRA api key falló contra Remotely — no
+      // tiene nada que ver con la sesión del usuario que llamó a nuestro
+      // endpoint. Reenviar ese mismo código tal cual hacía que el interceptor
+      // global de axios del frontend (ver shared/api/client.ts) lo confundiera
+      // con "tu sesión de InsiDesk venció" y deslogueara a cualquiera que
+      // entrara a una pantalla que consulta Remotely (Empresas, Dispositivos)
+      // mientras el servidor de Remotely tuviera un problema de credenciales/
+      // certificado — un bug real, no hipotético (confirmado en logs). Todo lo
+      // que no sea 401/403 se reenvía igual (404 "dispositivo no encontrado",
+      // etc. sí son significativos para quien nos llama).
+      const upstreamStatus = err.response?.status;
+      const status = upstreamStatus === 401 || upstreamStatus === 403 ? 502 : upstreamStatus ?? 502;
+      throw new AppError(message, status);
     }
     throw err;
   }

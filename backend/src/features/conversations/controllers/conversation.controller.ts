@@ -42,8 +42,8 @@ export const ConversationController = {
     res.status(201).json({ data: message });
   },
 
-  async sendAgentInstallerLink(req: Request, res: Response): Promise<void> {
-    const message = await conversationService.sendAgentInstallerLink(req.params.id, req.user!.id);
+  async sendPortableConnectLink(req: Request, res: Response): Promise<void> {
+    const message = await conversationService.sendPortableConnectLink(req.params.id, req.user!.id);
     res.status(201).json({ data: message });
   },
 

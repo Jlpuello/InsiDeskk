@@ -6,9 +6,6 @@ import { TicketCategoriesSection } from './TicketCategoriesSection.tsx';
 import { SlaMatrixSection } from './SlaMatrixSection.tsx';
 import { ActivityTemplatesSection } from './ActivityTemplatesSection.tsx';
 import { TicketLevelVisibilitySection } from './TicketLevelVisibilitySection.tsx';
-import { WhatsappSettingsSection } from './WhatsappSettingsSection.tsx';
-import { AiSettingsSection } from './AiSettingsSection.tsx';
-import { ChatbotSettingsSection } from './ChatbotSettingsSection.tsx';
 import { EmailSettingsSection } from './EmailSettingsSection.tsx';
 import { DocumentationTemplatesSection } from './DocumentationTemplatesSection.tsx';
 import { OrganizationSettingsSection } from './OrganizationSettingsSection.tsx';
@@ -23,9 +20,6 @@ type SettingsTab =
   | 'sla'
   | 'niveles'
   | 'actividades'
-  | 'whatsapp'
-  | 'chatbot'
-  | 'ia'
   | 'email'
   | 'plantillas';
 
@@ -37,9 +31,6 @@ const TABS: { id: SettingsTab; label: string }[] = [
   { id: 'sla', label: 'SLA' },
   { id: 'niveles', label: 'Niveles' },
   { id: 'actividades', label: 'Actividades' },
-  { id: 'whatsapp', label: 'WhatsApp' },
-  { id: 'chatbot', label: 'Chatbot' },
-  { id: 'ia', label: 'IA' },
   { id: 'email', label: 'Email' },
   { id: 'plantillas', label: 'Plantillas' },
 ];
@@ -204,9 +195,6 @@ export function SettingsPage() {
       {tab === 'sla' && <SlaMatrixSection />}
       {tab === 'niveles' && <TicketLevelVisibilitySection />}
       {tab === 'actividades' && <ActivityTemplatesSection />}
-      {tab === 'whatsapp' && <WhatsappSettingsSection />}
-      {tab === 'chatbot' && <ChatbotSettingsSection />}
-      {tab === 'ia' && <AiSettingsSection />}
       {tab === 'email' && <EmailSettingsSection />}
       {tab === 'plantillas' && <DocumentationTemplatesSection />}
     </div>

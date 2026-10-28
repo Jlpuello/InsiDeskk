@@ -1,0 +1,53 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e10]:
+      - paragraph [ref=e11]: InsiDesk
+      - paragraph [ref=e12]: Mesa de ayuda
+    - navigation [ref=e13]:
+      - generic [ref=e14]:
+        - paragraph [ref=e15]: Operación
+        - link "Dashboard" [ref=e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=e32]:
+        - paragraph [ref=e33]: Recursos
+        - link "Dispositivos" [ref=e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=e51]:
+        - paragraph [ref=e52]: Comercial
+        - link "Cotizaciones" [ref=e53] [cursor=pointer]:
+          - /url: /quotes
+      - generic [ref=e57]:
+        - paragraph [ref=e58]: Administración
+        - link "Empresas" [ref=e59] [cursor=pointer]:
+          - /url: /companies
+        - link "Usuarios" [ref=e64] [cursor=pointer]:
+          - /url: /users
+        - link "Agentes" [ref=e70] [cursor=pointer]:
+          - /url: /agents
+        - link "Logs" [ref=e74] [cursor=pointer]:
+          - /url: /logs
+        - link "Configuración" [ref=e78] [cursor=pointer]:
+          - /url: /settings
+  - generic [ref=e82]:
+    - banner [ref=e83]:
+      - generic [ref=e84]:
+        - button "Mensajes" [ref=e86] [cursor=pointer]
+        - button "Notificaciones" [ref=e90] [cursor=pointer]
+        - generic [ref=e95]:
+          - generic [ref=e96]: A
+          - generic [ref=e97]:
+            - paragraph [ref=e98]: Admin
+            - paragraph [ref=e99]: Admin
+          - button "Cerrar sesión" [ref=e100] [cursor=pointer]
+    - main [ref=e104]:
+      - paragraph [ref=e105]: Cargando mensajes...

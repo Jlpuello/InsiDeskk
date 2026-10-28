@@ -1,0 +1,87 @@
+- generic [ref=f5e3]:
+  - complementary [ref=f5e4]:
+    - generic [ref=f5e10]:
+      - paragraph [ref=f5e11]: InsiDesk
+      - paragraph [ref=f5e12]: Mesa de ayuda
+    - navigation [ref=f5e13]:
+      - generic [ref=f5e14]:
+        - paragraph [ref=f5e15]: Operación
+        - link "Dashboard" [ref=f5e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=f5e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=f5e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=f5e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=f5e32]:
+        - paragraph [ref=f5e33]: Recursos
+        - link "Dispositivos" [ref=f5e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=f5e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=f5e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=f5e51]:
+        - paragraph [ref=f5e52]: Comercial
+        - link "Cotizaciones" [ref=f5e53] [cursor=pointer]:
+          - /url: /quotes
+  - generic [ref=f5e57]:
+    - banner [ref=f5e58]:
+      - generic [ref=f5e59]:
+        - button "Mensajes" [ref=f5e61] [cursor=pointer]:
+          - generic [ref=f5e94]: "1"
+        - button "Notificaciones" [ref=f5e65] [cursor=pointer]:
+          - generic [ref=f5e95]: "2"
+        - button "J Juan Técnico" [ref=f5e71] [cursor=pointer]:
+          - generic [ref=f5e72]: J
+          - generic [ref=f5e73]:
+            - paragraph [ref=f5e74]: Juan
+            - paragraph [ref=f5e75]: Técnico
+    - main [ref=f5e76]:
+      - generic [ref=f5e198]:
+        - generic [ref=f5e199]:
+          - generic [ref=f5e200]:
+            - link "← Inventario" [ref=f5e201] [cursor=pointer]:
+              - /url: /inventory
+            - heading "microtick" [level=1] [ref=f5e202]
+          - generic [ref=f5e203]:
+            - link "Ficha PDF" [ref=f5e204] [cursor=pointer]:
+              - /url: /inventory/0d1e6eec-8cc7-4d03-b4d7-95212e07bb36/report
+            - button "Editar" [ref=f5e209] [cursor=pointer]
+            - button "Eliminar" [ref=f5e213] [cursor=pointer]
+        - generic [ref=f5e217]:
+          - generic [ref=f5e218]:
+            - generic [ref=f5e219]: Router
+            - generic [ref=f5e220]: Activo
+          - generic [ref=f5e221]:
+            - generic [ref=f5e222]:
+              - term [ref=f5e223]: Empresa
+              - definition [ref=f5e224]: IMPORMAR
+            - generic [ref=f5e225]:
+              - term [ref=f5e226]: Marca
+              - definition [ref=f5e227]: microtick
+            - generic [ref=f5e228]:
+              - term [ref=f5e229]: Modelo
+              - definition [ref=f5e230]: mcd-34gh4
+            - generic [ref=f5e231]:
+              - term [ref=f5e232]: N° de serie
+              - definition [ref=f5e233]: de3453w4
+            - generic [ref=f5e234]:
+              - term [ref=f5e235]: IP
+              - definition [ref=f5e236]: 192.168.10.1
+            - generic [ref=f5e237]:
+              - term [ref=f5e238]: MAC
+              - definition [ref=f5e239]: df:4r:45:34:d3
+            - generic [ref=f5e240]:
+              - term [ref=f5e241]: Ubicación
+              - definition [ref=f5e242]: rack principal
+            - generic [ref=f5e243]:
+              - term [ref=f5e244]: Proveedor
+              - definition [ref=f5e245]: na
+            - generic [ref=f5e246]:
+              - term [ref=f5e247]: Fecha de compra
+              - definition [ref=f5e248]: 21/9/2026
+            - generic [ref=f5e249]:
+              - term [ref=f5e250]: Garantía vence
+              - definition [ref=f5e251]: 22/9/2026

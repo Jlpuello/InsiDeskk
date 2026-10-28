@@ -47,6 +47,8 @@ ticketRoutes.post('/', asyncHandler(TicketController.create));
 // "stats" como si fuera un :id.
 ticketRoutes.get('/stats', asyncHandler(TicketController.stats));
 ticketRoutes.get('/stats/mine', asyncHandler(TicketController.myOpenCount));
+ticketRoutes.get('/stats/by-priority', asyncHandler(TicketController.statsByPriority));
+ticketRoutes.get('/stats/trend', asyncHandler(TicketController.statsTrend));
 ticketRoutes.get('/:id', asyncHandler(TicketController.getById));
 // Asignación, edición de campos y flujo de estados (iniciar/pausar/cerrar)
 // son acciones del equipo técnico, no del cliente que reportó el ticket —

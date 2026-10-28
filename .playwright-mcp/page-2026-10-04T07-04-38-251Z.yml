@@ -1,0 +1,134 @@
+- generic [ref=f3e40]:
+  - complementary [ref=f3e41]:
+    - generic [ref=f3e42]:
+      - generic [ref=f3e47]:
+        - paragraph [ref=f3e48]: InsiDesk
+        - paragraph [ref=f3e49]: Mesa de ayuda
+      - button "Cerrar menú" [ref=f3e50] [cursor=pointer]
+    - navigation [ref=f3e54]:
+      - generic [ref=f3e55]:
+        - paragraph [ref=f3e56]: Operación
+        - link "Dashboard" [ref=f3e57] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=f3e63] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=f3e66] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=f3e70] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=f3e73]:
+        - paragraph [ref=f3e74]: Recursos
+        - link "Dispositivos" [ref=f3e75] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=f3e78] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=f3e81] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=f3e92]:
+        - paragraph [ref=f3e93]: Comercial
+        - link "Cotizaciones" [ref=f3e94] [cursor=pointer]:
+          - /url: /quotes
+      - generic [ref=f3e98]:
+        - paragraph [ref=f3e99]: Administración
+        - link "Empresas" [ref=f3e100] [cursor=pointer]:
+          - /url: /companies
+        - link "Usuarios" [ref=f3e105] [cursor=pointer]:
+          - /url: /users
+        - link "Agentes" [ref=f3e111] [cursor=pointer]:
+          - /url: /agents
+        - link "Logs" [ref=f3e115] [cursor=pointer]:
+          - /url: /logs
+        - link "Configuración" [ref=f3e119] [cursor=pointer]:
+          - /url: /settings
+  - generic [ref=f3e123]:
+    - banner [ref=f3e124]:
+      - button "Abrir menú" [ref=f3e125] [cursor=pointer]
+      - generic [ref=f3e127]:
+        - button "Mensajes" [ref=f3e129] [cursor=pointer]
+        - button "Notificaciones" [ref=f3e133] [cursor=pointer]
+        - generic [ref=f3e138]:
+          - generic [ref=f3e139]: A
+          - button "Cerrar sesión" [ref=f3e140] [cursor=pointer]
+    - main [ref=f3e144]:
+      - generic [ref=f3e145]:
+        - generic [ref=f3e146]:
+          - heading "Tickets" [level=1] [ref=f3e147]
+          - button "Nuevo ticket" [ref=f3e148] [cursor=pointer]
+        - generic [ref=f3e150]:
+          - combobox [ref=f3e151]:
+            - option "Sin cerrar" [selected]
+            - option "Todos los estados"
+            - option "Abierto"
+            - option "En progreso"
+            - option "En espera"
+            - option "Esperando aprobación"
+            - option "Cerrado"
+            - option "Cancelado"
+          - combobox [ref=f3e152]:
+            - option "Toda prioridad" [selected]
+            - option "baja"
+            - option "media"
+            - option "alta"
+            - option "critica"
+          - combobox [ref=f3e153]:
+            - option "Toda categoría" [selected]
+            - option "CCTV"
+            - option "Conexion"
+            - option "Hardware"
+            - option "Software"
+          - combobox [ref=f3e154]:
+            - option "Todo asignado" [selected]
+            - option "Sin asignar"
+            - option "Smoke Test"
+            - option "Admin"
+            - option "Smoke Test"
+            - option "Smoke Test"
+            - option "Smoke Test"
+            - option "Smoke Test"
+            - option "Juan"
+        - table [ref=f3e156]:
+          - rowgroup [ref=f3e157]:
+            - row [ref=f3e158]:
+              - columnheader "Ticket" [ref=f3e159]
+              - columnheader "Prioridad" [ref=f3e160]
+              - columnheader "Estado" [ref=f3e161]
+              - columnheader "Asignado" [ref=f3e162]
+              - columnheader "SLA" [ref=f3e163]
+              - columnheader "Creado" [ref=f3e164]
+          - rowgroup [ref=f3e165]:
+            - row [ref=f3e166] [cursor=pointer]:
+              - cell [ref=f3e167]:
+                - paragraph [ref=f3e168]: problemas con office
+                - paragraph [ref=f3e169]: 0ec11f02
+              - cell "media" [ref=f3e170]
+              - cell "Abierto" [ref=f3e173]
+              - cell "Sin asignar" [ref=f3e174]
+              - cell "Vencido hace 38 h" [ref=f3e175]
+              - cell "30/9/2026" [ref=f3e176]
+            - row [ref=f3e177] [cursor=pointer]:
+              - cell [ref=f3e178]:
+                - paragraph [ref=f3e179]: problemas cocn la camra
+                - paragraph [ref=f3e180]: 9d2e2b03
+              - cell "alta" [ref=f3e181]
+              - cell "Abierto" [ref=f3e184]
+              - cell "Admin" [ref=f3e185]
+              - cell "Vencido hace 15 d" [ref=f3e186]
+              - cell "19/9/2026" [ref=f3e187]
+            - row [ref=f3e188] [cursor=pointer]:
+              - cell [ref=f3e189]:
+                - paragraph [ref=f3e190]: Impresora atascada - test fijo
+                - paragraph [ref=f3e191]: f8b0c1f5
+              - cell "baja" [ref=f3e192]
+              - cell "Abierto" [ref=f3e195]
+              - cell "Admin" [ref=f3e196]
+              - cell "Vencido hace 12 d" [ref=f3e197]
+              - cell "17/9/2026" [ref=f3e198]
+            - row [ref=f3e199] [cursor=pointer]:
+              - cell [ref=f3e200]:
+                - paragraph [ref=f3e201]: Impresora no imprime - test UI
+                - paragraph [ref=f3e202]: 4b8b766e
+              - cell "alta" [ref=f3e203]
+              - cell "En espera" [ref=f3e206]
+              - cell "Admin" [ref=f3e207]
+              - cell "Vencido hace 16 d" [ref=f3e208]
+              - cell "17/9/2026" [ref=f3e209]

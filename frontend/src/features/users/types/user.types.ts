@@ -15,4 +15,7 @@ export interface UserSummary {
   // booleano) — hoy el único valor real es "quotes:approve", ver
   // Configuración → Aprobadores.
   permisos: string[];
+  // Para mostrar el botón "Resetear 2FA" (ver features/account) — solo
+  // tiene sentido ofrecerlo si está activo.
+  twoFactorEnabled: boolean;
 }

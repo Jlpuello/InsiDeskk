@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Menu, LogOut } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Menu, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../features/auth/store/auth.store.ts';
 import { authApi } from '../../features/auth/api/auth.api.ts';
 import { NotificationBell } from './NotificationBell.tsx';
@@ -34,9 +35,24 @@ function initialsOf(nombre: string): string {
 // Sidebar. El botón de hamburguesa sigue siendo el mismo de siempre, solo que
 // ahora vive acá en vez de en su propio header mobile-only.
 export function TopBar({ onOpenMobileNav }: TopBarProps) {
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Mismo patrón de "cerrar al clickear afuera" que NotificationBell.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
 
   // La cookie de sesión es httpOnly: solo el backend puede borrarla. Si el
   // request falla igual se limpia el estado local (la sesión vieja ya no sirve
@@ -69,24 +85,44 @@ export function TopBar({ onOpenMobileNav }: TopBarProps) {
           <>
             <div className="h-6 w-px bg-gray-200" />
 
-            <div className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-1.5 hover:bg-gray-50">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                {initialsOf(user.nombre)}
-              </span>
-              <div className="hidden text-right leading-tight sm:block">
-                <p className="text-sm font-medium text-gray-900">{user.nombre}</p>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
-                  {ROLE_LABELS[user.rol] ?? user.rol}
-                </p>
-              </div>
+            <div ref={menuRef} className="relative">
               <button
-                onClick={() => setShowLogoutConfirm(true)}
-                aria-label="Cerrar sesión"
-                title="Cerrar sesión"
-                className="rounded-full p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 hover:bg-gray-50"
               >
-                <LogOut size={17} />
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+                  {initialsOf(user.nombre)}
+                </span>
+                <div className="hidden text-right leading-tight sm:block">
+                  <p className="text-sm font-medium text-gray-900">{user.nombre}</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                    {ROLE_LABELS[user.rol] ?? user.rol}
+                  </p>
+                </div>
               </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 z-50 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate('/account/security');
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <ShieldCheck size={15} className="text-gray-400" /> Mi cuenta
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setShowLogoutConfirm(true);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut size={15} /> Cerrar sesión
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}

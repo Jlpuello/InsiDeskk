@@ -3,6 +3,7 @@ import { AppError, NotFoundError } from '../../../shared/utils/error.handler.js'
 import { resolveEmpresaId } from '../../../shared/security/tenant-scope.js';
 import { recordCriticalAction } from '../../../shared/security/critical-action.service.js';
 import { encryptionService } from '../../../shared/utils/encryption.js';
+import { tokenVersionService } from '../../../shared/auth/token-version.service.js';
 import type { CreateUserInput, UpdateUserInput, UserSummary } from '../types/user.types.js';
 import type { User } from '@prisma/client';
 
@@ -118,6 +119,39 @@ export class UserService {
     });
   }
 
+  // Para cuando alguien con 2FA queda bloqueado (perdió el teléfono y no
+  // guardó los códigos de respaldo) — un admin lo resetea sin necesitar la
+  // contraseña de esa persona, justo porque no puede entrar. Acción crítica:
+  // exige motivo (mismo criterio que cambiar rol/permisos/borrar) además del
+  // auto-audit genérico. Bumpea tokenVersion: si la cuenta resuelta ya tenía
+  // una sesión activa en algún lado, queda cerrada (el estado de 2FA cambió
+  // de fondo, no tiene sentido que una sesión vieja seguía corriendo como si
+  // nada). Si la cuenta es admin, el guard de App.tsx la va a forzar a
+  // configurarlo de nuevo apenas vuelva a loguearse.
+  async resetTwoFactor(id: string, motivo: string): Promise<UserSummary> {
+    const existing = await userRepository.findById(id);
+    if (!existing) throw new NotFoundError('Usuario');
+    if (!existing.twoFactorEnabled) {
+      throw new AppError('Este usuario no tiene 2FA activo', 422);
+    }
+
+    const updated = await userRepository.update(id, {
+      twoFactorEnabled: false,
+      twoFactorSecret: null,
+      twoFactorBackupCodes: [],
+    });
+    await tokenVersionService.bump(id);
+
+    await recordCriticalAction({
+      accion: 'TWO_FACTOR_RESET',
+      tabla: 'User',
+      registroId: id,
+      motivo: `${existing.email}: ${motivo.trim()}`,
+    });
+
+    return this.toSummary(updated);
+  }
+
   private toSummary(user: User & { empresa?: { nombre: string } | null }): UserSummary {
     return {
       id: user.id,
@@ -129,6 +163,7 @@ export class UserService {
       empresaNombre: user.empresa?.nombre,
       nivel: user.nivel,
       permisos: user.permisos,
+      twoFactorEnabled: user.twoFactorEnabled,
     };
   }
 }

@@ -202,6 +202,23 @@ model User {
   empresa      Company?  @relation(fields: [empresaId], references: [id], onDelete: SetNull)
   activo       Boolean   @default(true)
   ultimoLogin  DateTime? @map("ultimo_login")
+  // Se incrementa al cambiar la contraseña o tocar el 2FA (activar/desactivar,
+  // "cerrar otras sesiones") — embebido en el JWT y comparado en cada request
+  // (ver authMiddleware.ts); un token viejo con una versión distinta se
+  // rechaza aunque no haya expirado todavía. Sin esto, cambiar la contraseña
+  // no invalidaba una sesión ya robada (los refresh token son JWT sin estado,
+  // no hay tabla de sesiones que borrar).
+  tokenVersion Int       @default(0) @map("token_version")
+  // TOTP (RFC 6238, app autenticadora) — nunca por email, ver análisis previo
+  // a esta migración. Secreto cifrado en reposo (AES-256-GCM, mismo criterio
+  // que otros campos sensibles) — twoFactorEnabled=false mientras el usuario
+  // no confirma el primer código (ver AccountController.verify2fa), así un
+  // "setup" generado y nunca confirmado no dispara nada.
+  twoFactorEnabled     Boolean  @default(false) @map("two_factor_enabled")
+  twoFactorSecret      String?  @map("two_factor_secret")
+  // Cada código hasheado con bcrypt (igual que una contraseña) — de un solo
+  // uso, se remueve del array al consumirse (ver AuthService.loginWithTwoFactor).
+  twoFactorBackupCodes String[] @default([]) @map("two_factor_backup_codes")
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

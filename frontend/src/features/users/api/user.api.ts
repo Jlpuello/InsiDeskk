@@ -47,4 +47,12 @@ export const userApi = {
   async remove(id: string, motivo: string): Promise<void> {
     await apiClient.delete(`/users/${id}`, { data: { motivo } });
   },
+
+  // Para cuando alguien con 2FA activo queda bloqueado (perdió el teléfono y
+  // no guardó los códigos de respaldo) — acción crítica, exige motivo y
+  // queda auditada (ver UserService.resetTwoFactor).
+  async resetTwoFactor(id: string, motivo: string): Promise<UserSummary> {
+    const { data } = await apiClient.post<{ data: UserSummary }>(`/users/${id}/reset-2fa`, { motivo });
+    return data.data;
+  },
 };

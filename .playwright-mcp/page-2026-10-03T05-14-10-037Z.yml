@@ -1,0 +1,124 @@
+- generic [ref=f1e3]:
+  - complementary [ref=f1e4]:
+    - generic [ref=f1e10]:
+      - paragraph [ref=f1e11]: InsiDesk
+      - paragraph [ref=f1e12]: Mesa de ayuda
+    - navigation [ref=f1e13]:
+      - generic [ref=f1e14]:
+        - paragraph [ref=f1e15]: Operación
+        - link "Dashboard" [ref=f1e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=f1e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=f1e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=f1e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=f1e32]:
+        - paragraph [ref=f1e33]: Recursos
+        - link "Dispositivos" [ref=f1e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=f1e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=f1e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=f1e51]:
+        - paragraph [ref=f1e52]: Comercial
+        - link "Cotizaciones" [ref=f1e53] [cursor=pointer]:
+          - /url: /quotes
+      - generic [ref=f1e57]:
+        - paragraph [ref=f1e58]: Administración
+        - link "Empresas" [ref=f1e59] [cursor=pointer]:
+          - /url: /companies
+        - link "Usuarios" [ref=f1e64] [cursor=pointer]:
+          - /url: /users
+        - link "Agentes" [ref=f1e70] [cursor=pointer]:
+          - /url: /agents
+        - link "Logs" [ref=f1e74] [cursor=pointer]:
+          - /url: /logs
+        - link "Configuración" [ref=f1e78] [cursor=pointer]:
+          - /url: /settings
+  - generic [ref=f1e82]:
+    - banner [ref=f1e83]:
+      - generic [ref=f1e84]:
+        - button "Mensajes" [ref=f1e86] [cursor=pointer]
+        - button "Notificaciones" [ref=f1e90] [cursor=pointer]
+        - generic [ref=f1e95]:
+          - generic [ref=f1e96]: A
+          - generic [ref=f1e97]:
+            - paragraph [ref=f1e98]: Admin
+            - paragraph [ref=f1e99]: Admin
+          - button "Cerrar sesión" [ref=f1e100] [cursor=pointer]
+    - main [ref=f1e104]:
+      - generic [ref=f1e159]:
+        - link "Volver a Mensajes" [ref=f1e160] [cursor=pointer]:
+          - /url: /inbox
+        - heading "Configuración de mensajería" [level=1] [ref=f1e163]
+        - paragraph [ref=f1e164]: WhatsApp, chatbot e IA del canal de mensajes. Aplica globalmente.
+        - generic [ref=f1e165]:
+          - button "WhatsApp" [ref=f1e166] [cursor=pointer]
+          - button "Chatbot" [active] [ref=f1e167] [cursor=pointer]
+          - button "IA" [ref=f1e168] [cursor=pointer]
+        - generic [ref=f1e195]:
+          - generic [ref=f1e196]:
+            - heading "Empresa por defecto (clientes sin NIT)" [level=2] [ref=f1e197]
+            - paragraph [ref=f1e198]: Cuando alguien reporta un problema desde el bot indicando que no tiene NIT (soporte a un particular), el ticket queda asociado a esta empresa — solo para llevar control, no se crea una empresa nueva por persona. Sin esto configurado, ese camino queda deshabilitado.
+            - combobox [ref=f1e199]:
+              - option "Sin configurar"
+              - option "IMPORMAR"
+              - option "Smoke Co 38940d86-5305-4b54-8c9f-1bf1cb1c6b24"
+              - option "Smoke Co c7cf7f5a-a595-4fa5-aff5-2db74ffd9633"
+              - option "jorge puello" [selected]
+              - option "la prueba"
+            - button "Guardar" [ref=f1e200] [cursor=pointer]
+          - generic [ref=f1e201]:
+            - generic [ref=f1e202]:
+              - generic [ref=f1e203]:
+                - heading "Árbol de decisiones del chatbot" [level=2] [ref=f1e204]
+                - paragraph [ref=f1e205]: Guía la conversación del bot en la landing de soporte — cada opción lleva a otro nodo o dispara una acción (crear ticket, derivar a un agente, o finalizar).
+              - generic [ref=f1e206]:
+                - checkbox "Activo" [checked] [ref=f1e207]
+                - text: Activo
+            - generic [ref=f1e208]: Nodo inicial
+            - combobox [ref=f1e209]:
+              - option "Elegir..."
+              - option "inicio" [selected]
+          - generic [ref=f1e210]:
+            - generic [ref=f1e211]:
+              - generic [ref=f1e212]: inicio· inicio
+              - button "Borrar nodo" [ref=f1e213] [cursor=pointer]
+            - generic [ref=f1e217]: Mensaje del bot
+            - textbox [ref=f1e218]: Hola
+            - generic [ref=f1e219]: Opciones
+            - generic [ref=f1e220]:
+              - generic [ref=f1e221]:
+                - textbox "Texto del botón" [ref=f1e222]: Hablar con un asistente
+                - combobox [ref=f1e223]:
+                  - option "Crear ticket"
+                  - option "Hablar con un agente" [selected]
+                  - option "Hablar con un asistente (IA)"
+                  - option "Finalizar conversación"
+                - button [ref=f1e224] [cursor=pointer]
+              - generic [ref=f1e228]:
+                - textbox "Texto del botón" [ref=f1e229]: Salir
+                - combobox [ref=f1e230]:
+                  - option "Crear ticket"
+                  - option "Hablar con un agente"
+                  - option "Hablar con un asistente (IA)"
+                  - option "Finalizar conversación" [selected]
+                - button [ref=f1e231] [cursor=pointer]
+              - generic [ref=f1e235]:
+                - textbox "Texto del botón" [ref=f1e236]: soporte
+                - combobox [ref=f1e237]:
+                  - option "Crear ticket" [selected]
+                  - option "Hablar con un agente"
+                  - option "Hablar con un asistente (IA)"
+                  - option "Finalizar conversación"
+                - button [ref=f1e238] [cursor=pointer]
+            - button "Agregar opción" [ref=f1e242] [cursor=pointer]
+          - generic [ref=f1e245]:
+            - 'textbox "id-del-nuevo-nodo (ej: pedir-nit)" [ref=f1e246]'
+            - button "Agregar nodo" [ref=f1e247] [cursor=pointer]
+          - generic [ref=f1e249]:
+            - button "Guardar" [ref=f1e250] [cursor=pointer]
+            - paragraph [ref=f1e251]: "Última actualización: 30/9/2026, 11:41:27"

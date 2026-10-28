@@ -1,0 +1,109 @@
+- generic [ref=f1e44]:
+  - complementary [ref=f1e45]:
+    - generic [ref=f1e51]:
+      - paragraph [ref=f1e52]: InsiDesk
+      - paragraph [ref=f1e53]: Mesa de ayuda
+    - navigation [ref=f1e54]:
+      - generic [ref=f1e55]:
+        - paragraph [ref=f1e56]: Operación
+        - link "Dashboard" [ref=f1e57] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=f1e63] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=f1e66] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=f1e70] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=f1e73]:
+        - paragraph [ref=f1e74]: Recursos
+        - link "Dispositivos" [ref=f1e75] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=f1e78] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=f1e81] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=f1e92]:
+        - paragraph [ref=f1e93]: Comercial
+        - link "Cotizaciones" [ref=f1e94] [cursor=pointer]:
+          - /url: /quotes
+  - generic [ref=f1e98]:
+    - banner [ref=f1e99]:
+      - generic [ref=f1e100]:
+        - button "Mensajes" [ref=f1e102] [cursor=pointer]:
+          - generic [ref=f1e105]: "1"
+        - button "Notificaciones" [ref=f1e107] [cursor=pointer]:
+          - generic [ref=f1e111]: "2"
+        - button "J Juan Técnico" [ref=f1e114] [cursor=pointer]:
+          - generic [ref=f1e115]: J
+          - generic [ref=f1e116]:
+            - paragraph [ref=f1e117]: Juan
+            - paragraph [ref=f1e118]: Técnico
+    - main [ref=f1e119]:
+      - generic [ref=f1e120]:
+        - generic [ref=f1e121]:
+          - heading "Tickets" [level=1] [ref=f1e122]
+          - button "Nuevo ticket" [ref=f1e123] [cursor=pointer]
+        - generic [ref=f1e125]:
+          - combobox [ref=f1e126]:
+            - option "Sin cerrar" [selected]
+            - option "Todos los estados"
+            - option "Abierto"
+            - option "En progreso"
+            - option "En espera"
+            - option "Esperando aprobación"
+            - option "Cerrado"
+            - option "Cancelado"
+          - combobox [ref=f1e127]:
+            - option "Toda prioridad" [selected]
+            - option "baja"
+            - option "media"
+            - option "alta"
+            - option "critica"
+          - combobox [ref=f1e128]:
+            - option "Toda categoría" [selected]
+            - option "CCTV"
+            - option "Conexion"
+            - option "Hardware"
+            - option "Software"
+          - combobox [ref=f1e129]:
+            - option "Todo asignado" [selected]
+            - option "Sin asignar"
+            - option "Admin"
+            - option "Juan"
+        - table [ref=f1e131]:
+          - rowgroup [ref=f1e132]:
+            - row [ref=f1e133]:
+              - columnheader "Ticket" [ref=f1e134]
+              - columnheader "Prioridad" [ref=f1e135]
+              - columnheader "Estado" [ref=f1e136]
+              - columnheader "Asignado" [ref=f1e137]
+              - columnheader "SLA" [ref=f1e138]
+              - columnheader "Creado" [ref=f1e139]
+          - rowgroup [ref=f1e140]:
+            - row [ref=f1e141] [cursor=pointer]:
+              - cell [ref=f1e142]:
+                - paragraph [ref=f1e143]: problemas cocn la camra
+                - paragraph [ref=f1e144]: 9d2e2b03
+              - cell "alta" [ref=f1e145]
+              - cell "Abierto" [ref=f1e148]
+              - cell "Admin" [ref=f1e149]
+              - cell "Vencido hace 38 d" [ref=f1e150]
+              - cell "19/9/2026" [ref=f1e151]
+            - row [ref=f1e152] [cursor=pointer]:
+              - cell [ref=f1e153]:
+                - paragraph [ref=f1e154]: Impresora atascada - test fijo
+                - paragraph [ref=f1e155]: f8b0c1f5
+              - cell "baja" [ref=f1e156]
+              - cell "Abierto" [ref=f1e159]
+              - cell "Admin" [ref=f1e160]
+              - cell "Vencido hace 35 d" [ref=f1e161]
+              - cell "17/9/2026" [ref=f1e162]
+            - row [ref=f1e163] [cursor=pointer]:
+              - cell [ref=f1e164]:
+                - paragraph [ref=f1e165]: Impresora no imprime - test UI
+                - paragraph [ref=f1e166]: 4b8b766e
+              - cell "alta" [ref=f1e167]
+              - cell "En espera" [ref=f1e170]
+              - cell "Admin" [ref=f1e171]
+              - cell "Vencido hace 39 d" [ref=f1e172]
+              - cell "17/9/2026" [ref=f1e173]

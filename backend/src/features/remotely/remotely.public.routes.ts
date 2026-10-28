@@ -9,4 +9,4 @@ import { asyncHandler } from '../../shared/utils/async-handler.js';
 export const remotelyPublicRoutes = Router();
 
 remotelyPublicRoutes.post('/harden-report', asyncHandler(RemotelyPublicController.hardenReport));
-remotelyPublicRoutes.get('/agent-installer/:token', asyncHandler(RemotelyPublicController.agentInstaller));
+remotelyPublicRoutes.get('/portable-download', asyncHandler(RemotelyPublicController.portableDownload));

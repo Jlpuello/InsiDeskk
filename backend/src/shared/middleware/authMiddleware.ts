@@ -3,13 +3,18 @@ import { jwtService } from '../auth/jwt.service.js';
 import { UnauthorizedError, ForbiddenError } from '../utils/AppError.js';
 import { runWithContext } from '../utils/context.js';
 import { ACCESS_COOKIE, isCsrfValid } from '../auth/session-cookies.js';
+import { tokenVersionService } from '../auth/token-version.service.js';
+import { asyncHandler } from '../utils/async-handler.js';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 // Verifica el JWT y publica el usuario actual (id, rol, empresaId) + IP/UA en el
 // AsyncLocalStorage de shared/utils/context.ts, para que los middlewares de
 // Prisma (audit, RBAC) puedan leerlos sin que cada query reciba el `Request`.
-export function verifyJWT(req: Request, _res: Response, next: NextFunction): void {
+// Envuelta en asyncHandler al exportar (ver abajo): Express 4 no reenvía
+// rechazos de promesas al errorHandler solo, y esto ahora hace lookups
+// async (cache/DB) para el chequeo de tokenVersion.
+async function verifyJWTImpl(req: Request, _res: Response, next: NextFunction): Promise<void> {
   const header = req.headers.authorization;
   const bearer = header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : undefined;
   const cookieToken = req.cookies?.[ACCESS_COOKIE] as string | undefined;
@@ -33,6 +38,20 @@ export function verifyJWT(req: Request, _res: Response, next: NextFunction): voi
     throw new UnauthorizedError('Token inválido o expirado');
   }
 
+  // Los tokens de propósito especial (ej. "contraseña OK, falta 2FA" — ver
+  // generateTwoFactorPendingToken) nunca traen rol/tokenVersion — sin este
+  // chequeo, uno de esos igual pasaría por acá y quedaría autenticado para
+  // cualquier ruta que no chequee un rol específico (ej. las de /api/account,
+  // abiertas a cualquier usuario autenticado).
+  if (!payload.rol || typeof payload.tokenVersion !== 'number') {
+    throw new UnauthorizedError('Token inválido o expirado');
+  }
+
+  const currentVersion = await tokenVersionService.getCurrent(payload.id);
+  if (currentVersion === null || payload.tokenVersion !== currentVersion) {
+    throw new UnauthorizedError('Token inválido o expirado');
+  }
+
   req.user = payload;
 
   runWithContext(
@@ -46,6 +65,8 @@ export function verifyJWT(req: Request, _res: Response, next: NextFunction): voi
     next,
   );
 }
+
+export const verifyJWT = asyncHandler(verifyJWTImpl);
 
 export function authorize(...allowedRoles: string[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Trash2, UserCog } from 'lucide-react';
+import { Plus, ShieldOff, Trash2, UserCog } from 'lucide-react';
 import clsx from 'clsx';
 import { userApi } from '../api/user.api.ts';
 import type { UserRole, UserSummary } from '../types/user.types.ts';
@@ -35,6 +35,7 @@ export function UserList() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [roleTarget, setRoleTarget] = useState<UserSummary | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<UserSummary | null>(null);
+  const [twoFactorResetTarget, setTwoFactorResetTarget] = useState<UserSummary | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const [rolFilter, setRolFilter] = useState<'all' | UserRole>('all');
@@ -111,6 +112,13 @@ export function UserList() {
     if (!deleteTarget) return;
     await userApi.remove(deleteTarget.id, motivo);
     setDeleteTarget(null);
+    await load();
+  }
+
+  async function handleResetTwoFactor(motivo: string) {
+    if (!twoFactorResetTarget) return;
+    await userApi.resetTwoFactor(twoFactorResetTarget.id, motivo);
+    setTwoFactorResetTarget(null);
     await load();
   }
 
@@ -261,6 +269,17 @@ export function UserList() {
                       >
                         <UserCog size={16} />
                       </button>
+                      {user.twoFactorEnabled && (
+                        <button
+                          onClick={() => setTwoFactorResetTarget(user)}
+                          disabled={savingId === user.id}
+                          aria-label={`Resetear 2FA de ${user.nombre}`}
+                          title="Resetear verificación en dos pasos (si quedó bloqueado)"
+                          className="rounded-md p-1.5 text-gray-500 hover:bg-amber-50 hover:text-amber-600 disabled:opacity-50"
+                        >
+                          <ShieldOff size={16} />
+                        </button>
+                      )}
                       {user.id !== currentUserId && (
                         <button
                           onClick={() => setDeleteTarget(user)}
@@ -291,6 +310,16 @@ export function UserList() {
           confirmLabel="Eliminar"
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleDeleteUser}
+        />
+      )}
+      {twoFactorResetTarget && (
+        <MotivoModal
+          title="Resetear verificación en dos pasos"
+          subtitle={`${twoFactorResetTarget.nombre} · ${twoFactorResetTarget.email} — útil si perdió el acceso a su app autenticadora y no tiene códigos de respaldo`}
+          confirmLabel="Resetear 2FA"
+          confirmClassName="bg-amber-600 hover:bg-amber-700"
+          onClose={() => setTwoFactorResetTarget(null)}
+          onConfirm={handleResetTwoFactor}
         />
       )}
       {showCreateModal && (

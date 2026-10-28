@@ -22,10 +22,17 @@ const loginSchema = Joi.object({
   password: Joi.string().required(),
 });
 
+const loginTwoFactorSchema = Joi.object({
+  pendingToken: Joi.string().required(),
+  code: Joi.string().min(6).max(11).required(),
+});
+
 // El registro/login siempre pasa por Prisma, que devuelve el User completo —
-// incluyendo passwordHash. Nunca debe salir en la respuesta HTTP.
+// incluyendo passwordHash y los datos crudos del 2FA. Nunca deben salir en la
+// respuesta HTTP (twoFactorEnabled sí, el front lo necesita para saber el
+// estado — lo sensible es el secreto y los códigos de respaldo).
 function sanitizeUser(user: User) {
-  const { passwordHash: _passwordHash, ...safe } = user;
+  const { passwordHash: _passwordHash, twoFactorSecret: _twoFactorSecret, twoFactorBackupCodes: _twoFactorBackupCodes, ...safe } = user;
   return safe;
 }
 
@@ -42,14 +49,36 @@ export const AuthController = {
     const { error, value } = loginSchema.validate(req.body);
     if (error) throw new AppError(error.message, 422);
 
-    const { user, tokens } = await authService.login({
+    const result = await authService.login({
       ...value,
       ip: req.ip,
       userAgent: req.headers['user-agent'],
     });
 
+    if (result.requiresTwoFactor) {
+      res.status(200).json({ data: { requiresTwoFactor: true, pendingToken: result.pendingToken } });
+      return;
+    }
+
     // Los tokens viajan solo en cookies httpOnly (ver session-cookies.ts) — el
     // JS del navegador nunca los ve, así un XSS no puede robar la sesión.
+    setSessionCookies(res, result.tokens!);
+    res.status(200).json({ data: { user: sanitizeUser(result.user!) } });
+  },
+
+  // Segundo paso del login cuando hace falta 2FA — ver AuthService.login,
+  // que no emite cookies todavía en ese caso.
+  async loginTwoFactor(req: Request, res: Response): Promise<void> {
+    const { error, value } = loginTwoFactorSchema.validate(req.body);
+    if (error) throw new AppError(error.message, 422);
+
+    const { user, tokens } = await authService.loginWithTwoFactor(
+      value.pendingToken,
+      value.code,
+      req.ip,
+      req.headers['user-agent'],
+    );
+
     setSessionCookies(res, tokens);
     res.status(200).json({ data: { user: sanitizeUser(user) } });
   },

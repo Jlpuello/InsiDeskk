@@ -7,6 +7,7 @@ import { companyApi } from '../../companies/api/company.api.ts';
 import { useAuthStore } from '../../auth/store/auth.store.ts';
 import { hasPermission } from '../../../shared/security/permissions.ts';
 import { InventoryFormModal } from './InventoryFormModal.tsx';
+import { InventoryTopologyView } from './InventoryTopologyView.tsx';
 import type {
   InventoryEquipmentStatus,
   InventoryEquipmentType,
@@ -91,6 +92,7 @@ export function InventoryList() {
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [viewMode, setViewMode] = useState<'lista' | 'mapa'>('lista');
 
   function buildApiFilters(activeFilters: Filters) {
     return {
@@ -129,6 +131,18 @@ export function InventoryList() {
     load(next);
   }
 
+  // Para el título "Red de {empresa}" del mapa — se toma del propio item (ya
+  // viene con la empresa embebida) en vez de un estado aparte, así funciona
+  // igual para admin (filtrando por empresaId) y para tecnico/cliente (ya
+  // scoped a su empresa del lado del backend, sin que el filtro exista en su UI).
+  function resolveEmpresaNombre(): string {
+    const first = items[0];
+    const fromItem = first ? (first.origen === 'agente' ? first.device.empresa?.nombre : first.equipment.empresa?.nombre) : undefined;
+    if (fromItem) return fromItem;
+    if (filters.empresaId) return companies.find((c) => c.id === filters.empresaId)?.nombre ?? 'esta empresa';
+    return 'tu empresa';
+  }
+
   async function handleExport() {
     setExporting(true);
     try {
@@ -142,9 +156,29 @@ export function InventoryList() {
 
   return (
     <div className="p-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Inventario</h1>
         <div className="flex items-center gap-2">
+          <div className="flex gap-0.5 rounded-md bg-gray-100 p-0.5">
+            <button
+              onClick={() => setViewMode('lista')}
+              className={clsx(
+                'rounded px-3 py-1.5 text-xs font-medium',
+                viewMode === 'lista' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+              )}
+            >
+              Lista
+            </button>
+            <button
+              onClick={() => setViewMode('mapa')}
+              className={clsx(
+                'rounded px-3 py-1.5 text-xs font-medium',
+                viewMode === 'mapa' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+              )}
+            >
+              Mapa
+            </button>
+          </div>
           {canExport && (
             <button
               onClick={handleExport}
@@ -251,6 +285,19 @@ export function InventoryList() {
 
       {loading ? (
         <p className="text-gray-500">Cargando inventario...</p>
+      ) : viewMode === 'mapa' ? (
+        isAdmin && !filters.empresaId ? (
+          <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50">
+            <p className="text-sm text-gray-400">Elegí una empresa en el filtro para ver su mapa.</p>
+          </div>
+        ) : (
+          <InventoryTopologyView
+            items={items}
+            empresaNombre={resolveEmpresaNombre()}
+            onOpenEquipment={(id) => navigate(`/inventory/${id}`)}
+            onOpenDevice={(id) => navigate(`/devices/${id}`)}
+          />
+        )
       ) : items.length === 0 ? (
         <p className="text-gray-500">No hay equipo registrado.</p>
       ) : (

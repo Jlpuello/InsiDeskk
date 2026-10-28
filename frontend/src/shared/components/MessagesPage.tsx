@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import clsx from 'clsx';
-import { Download, Hash, MessageCircle, MessageSquarePlus, Plus } from 'lucide-react';
+import { Globe, Hash, MessageCircle, MessageSquarePlus, MoreVertical, Monitor, Plus, Settings } from 'lucide-react';
 import { conversationApi } from '../../features/conversations/api/conversation.api.ts';
 import { teamChatApi } from '../../features/team-chat/api/team-chat.api.ts';
 import { userApi } from '../../features/users/api/user.api.ts';
@@ -77,6 +77,7 @@ function teamEventToChatMessage(payload: TeamMessageEvent, currentUserId?: strin
 // resuelve siempre contra la lista completa, no la filtrada).
 export function MessagesPage() {
   const currentUserId = useAuthStore((state) => state.user?.id);
+  const isAdmin = useAuthStore((state) => state.user?.rol === 'admin');
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [externalConversations, setExternalConversations] = useState<ConversationSummary[]>([]);
@@ -88,17 +89,32 @@ export function MessagesPage() {
   const [loadingThread, setLoadingThread] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [sendingInstaller, setSendingInstaller] = useState(false);
+  const [sendingPortableLink, setSendingPortableLink] = useState(false);
   const [showDmPicker, setShowDmPicker] = useState(false);
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [groupNombre, setGroupNombre] = useState('');
   const [groupMiembros, setGroupMiembros] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
 
   const selectedIdRef = useRef<string | null>(null);
   useEffect(() => {
     selectedIdRef.current = selectedId;
+    setShowActionsMenu(false);
   }, [selectedId]);
+
+  // Mismo patrón de "cerrar al clickear afuera" que NotificationBell/TopBar.
+  useEffect(() => {
+    if (!showActionsMenu) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (actionsMenuRef.current && !actionsMenuRef.current.contains(e.target as Node)) {
+        setShowActionsMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showActionsMenu]);
 
   function loadExternal() {
     return conversationApi.list().then(setExternalConversations).catch(() => setError('No se pudieron cargar las conversaciones'));
@@ -201,6 +217,14 @@ export function MessagesPage() {
     }
   }
 
+  // Botón "volver" del header del hilo en mobile (ver onBack en ChatBox) —
+  // ahí lista e hilo activo ocupan la pantalla completa cada uno por turnos,
+  // así que hace falta una forma de soltar la selección sin el grid de 2
+  // columnas de desktop.
+  function clearSelection() {
+    setSelectedId(null);
+  }
+
   async function handleSetEstado(realId: string, estado: ConversationStatus) {
     try {
       const updated = await conversationApi.setEstado(realId, estado);
@@ -212,12 +236,16 @@ export function MessagesPage() {
 
   // El mensaje con el link aparece solo en el hilo vía el socket de staff
   // (mismo eco deduplicado que cualquier respuesta normal) — no hace falta
-  // tocar `messages` a mano acá.
-  async function handleSendInstallerLink(realId: string) {
-    setSendingInstaller(true);
+  // tocar `messages` a mano acá. A propósito NO instala nada: el contacto
+  // recibe el ejecutable portátil de Remotely (muestra un código en pantalla,
+  // sin dejar un agente permanente) — instalar el agente de verdad queda
+  // reservado a un técnico/admin desde Agentes, nunca gatillado por un
+  // contacto externo con solo abrir un link de chat.
+  async function handleSendPortableLink(realId: string) {
+    setSendingPortableLink(true);
     setError(null);
     try {
-      await conversationApi.sendAgentInstallerLink(realId);
+      await conversationApi.sendPortableConnectLink(realId);
     } catch (err) {
       // El backend ya devuelve un mensaje puntual para cada causa real (sin
       // servidor de Remotely configurado, falta API_PUBLIC_URL, etc.) —
@@ -226,7 +254,7 @@ export function MessagesPage() {
       const backendMessage = axios.isAxiosError(err) ? (err.response?.data as { error?: string } | undefined)?.error : undefined;
       setError(backendMessage ?? 'No se pudo enviar el link');
     } finally {
-      setSendingInstaller(false);
+      setSendingPortableLink(false);
     }
   }
 
@@ -281,7 +309,20 @@ export function MessagesPage() {
         // Ícono verde para distinguir de un vistazo un hilo de WhatsApp de
         // uno del widget de chat de /soporte — mismo lugar que ya usa `Hash`
         // para canales grupales de equipo.
-        avatarIcon: c.canal === 'whatsapp' ? <MessageCircle size={15} className="text-green-600" /> : undefined,
+        // Siempre lleva algún ícono (WhatsApp en verde vs. widget web en
+        // gris) — antes un chat externo sin WhatsApp quedaba con el mismo
+        // avatar "inicial pelada" que un DM de equipo, justo la ambigüedad
+        // que el filtro Externos/Equipo existe para resolver.
+        avatarIcon:
+          c.canal === 'whatsapp' ? (
+            <MessageCircle size={15} className="text-green-600" />
+          ) : (
+            <Globe size={15} className="text-gray-400" />
+          ),
+        // Borde de acento por tipo — se escanea la lista combinada de un
+        // vistazo (verde WhatsApp / azul chat web / índigo canal de equipo)
+        // sin tener que leer cada ícono uno por uno.
+        accentColor: c.canal === 'whatsapp' ? '#16a34a' : '#2563eb',
         unread: c.tieneNoLeidos,
         updatedAt: c.ultimoMensajeEn,
       }),
@@ -292,6 +333,9 @@ export function MessagesPage() {
         title: c.nombre,
         subtitle: c.ultimoMensaje?.contenido,
         avatarIcon: c.tipo === 'grupo' ? <Hash size={15} /> : undefined,
+        // Un DM 1:1 de equipo no lleva acento — ya no tiene nada más con qué
+        // confundirse en la lista (el filtro "Equipo" ya lo separa de lo externo).
+        accentColor: c.tipo === 'grupo' ? '#4f46e5' : undefined,
         unread: c.noLeido,
         updatedAt: c.ultimoMensaje?.createdAt ?? c.updatedAt,
       }),
@@ -322,6 +366,7 @@ export function MessagesPage() {
         conversations={chatConversations}
         activeConversationId={selectedId}
         onActiveConversationChange={selectConversation}
+        onBack={clearSelection}
         messages={messages}
         loadingMessages={loadingThread}
         adapter={adapter}
@@ -350,14 +395,28 @@ export function MessagesPage() {
             >
               <Plus size={16} />
             </button>
+            {isAdmin && (
+              <Link
+                to="/inbox/settings"
+                title="Configuración de mensajería (WhatsApp, chatbot, IA)"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50"
+              >
+                <Settings size={16} />
+              </Link>
+            )}
           </>
         }
         renderSubtitle={(c) => {
           const ext = findExternal(c.id);
           if (ext) {
+            // Clientes chicos/particulares a veces quedan con una "empresa"
+            // autogenerada que es literalmente su propio nombre — mostrarla
+            // igual duplica el título de arriba sin agregar información.
+            const sameAsContact = ext.empresa.nombre.trim().toLowerCase() === ext.contactoNombre.trim().toLowerCase();
+            const contactInfo = ext.contactoEmail ?? ext.contactoTelefono ?? 'sin contacto';
             return (
               <p className="truncate text-xs text-gray-400">
-                {ext.empresa.nombre} · {ext.contactoEmail ?? ext.contactoTelefono ?? 'sin contacto'}
+                {sameAsContact ? contactInfo : `${ext.empresa.nombre} · ${contactInfo}`}
               </p>
             );
           }
@@ -393,19 +452,38 @@ export function MessagesPage() {
                 {ESTADO_LABELS[ext.estado]}
               </span>
               <button
-                onClick={() => handleSendInstallerLink(ext.id)}
-                disabled={sendingInstaller}
-                title="Enviar link para instalar el agente de soporte remoto"
+                onClick={() => handleSendPortableLink(ext.id)}
+                disabled={sendingPortableLink}
+                title="Enviar link a la app portátil de soporte remoto (no instala nada, muestra un código de conexión)"
                 className="flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
               >
-                <Download size={13} /> Enviar instalador
+                <Monitor size={15} /> Enviar app de soporte
               </button>
-              <button
-                onClick={() => handleSetEstado(ext.id, ext.estado === 'abierta' ? 'cerrada' : 'abierta')}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-              >
-                {ext.estado === 'abierta' ? 'Cerrar' : 'Reabrir'}
-              </button>
+              {/* Acción secundaria (Cerrar/Reabrir) tucked en un menú — con la
+                  primaria arriba ya eran 3 botones + 2 badges peleando por
+                  atención en el header. */}
+              <div ref={actionsMenuRef} className="relative">
+                <button
+                  onClick={() => setShowActionsMenu((v) => !v)}
+                  aria-label="Más acciones"
+                  className="flex h-[30px] w-[30px] items-center justify-center rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50"
+                >
+                  <MoreVertical size={15} />
+                </button>
+                {showActionsMenu && (
+                  <div className="absolute right-0 z-10 mt-1 w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                    <button
+                      onClick={() => {
+                        setShowActionsMenu(false);
+                        handleSetEstado(ext.id, ext.estado === 'abierta' ? 'cerrada' : 'abierta');
+                      }}
+                      className="block w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50"
+                    >
+                      {ext.estado === 'abierta' ? 'Cerrar conversación' : 'Reabrir conversación'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           );
         }}

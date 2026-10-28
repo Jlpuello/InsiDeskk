@@ -30,8 +30,8 @@ export const conversationApi = {
   // El mensaje resultante llega solo al hilo vía el socket de staff (mismo
   // mecanismo, deduplicado por id, que ya usa cualquier respuesta normal) —
   // no hace falta tocar el estado local después de llamar esto.
-  async sendAgentInstallerLink(id: string): Promise<ConversationMessage> {
-    const { data } = await apiClient.post<{ data: ConversationMessage }>(`/conversations/${id}/agent-installer-link`);
+  async sendPortableConnectLink(id: string): Promise<ConversationMessage> {
+    const { data } = await apiClient.post<{ data: ConversationMessage }>(`/conversations/${id}/portable-connect-link`);
     return data.data;
   },
 

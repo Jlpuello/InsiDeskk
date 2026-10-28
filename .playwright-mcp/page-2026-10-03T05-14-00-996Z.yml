@@ -1,0 +1,83 @@
+- generic [ref=f1e3]:
+  - complementary [ref=f1e4]:
+    - generic [ref=f1e10]:
+      - paragraph [ref=f1e11]: InsiDesk
+      - paragraph [ref=f1e12]: Mesa de ayuda
+    - navigation [ref=f1e13]:
+      - generic [ref=f1e14]:
+        - paragraph [ref=f1e15]: Operación
+        - link "Dashboard" [ref=f1e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=f1e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=f1e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=f1e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=f1e32]:
+        - paragraph [ref=f1e33]: Recursos
+        - link "Dispositivos" [ref=f1e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=f1e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=f1e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=f1e51]:
+        - paragraph [ref=f1e52]: Comercial
+        - link "Cotizaciones" [ref=f1e53] [cursor=pointer]:
+          - /url: /quotes
+      - generic [ref=f1e57]:
+        - paragraph [ref=f1e58]: Administración
+        - link "Empresas" [ref=f1e59] [cursor=pointer]:
+          - /url: /companies
+        - link "Usuarios" [ref=f1e64] [cursor=pointer]:
+          - /url: /users
+        - link "Agentes" [ref=f1e70] [cursor=pointer]:
+          - /url: /agents
+        - link "Logs" [ref=f1e74] [cursor=pointer]:
+          - /url: /logs
+        - link "Configuración" [ref=f1e78] [cursor=pointer]:
+          - /url: /settings
+  - generic [ref=f1e82]:
+    - banner [ref=f1e83]:
+      - generic [ref=f1e84]:
+        - button "Mensajes" [ref=f1e86] [cursor=pointer]
+        - button "Notificaciones" [ref=f1e90] [cursor=pointer]
+        - generic [ref=f1e95]:
+          - generic [ref=f1e96]: A
+          - generic [ref=f1e97]:
+            - paragraph [ref=f1e98]: Admin
+            - paragraph [ref=f1e99]: Admin
+          - button "Cerrar sesión" [ref=f1e100] [cursor=pointer]
+    - main [ref=f1e104]:
+      - generic [ref=f1e159]:
+        - link "Volver a Mensajes" [ref=f1e160] [cursor=pointer]:
+          - /url: /inbox
+        - heading "Configuración de mensajería" [level=1] [ref=f1e163]
+        - paragraph [ref=f1e164]: WhatsApp, chatbot e IA del canal de mensajes. Aplica globalmente.
+        - generic [ref=f1e165]:
+          - button "WhatsApp" [ref=f1e166] [cursor=pointer]
+          - button "Chatbot" [ref=f1e167] [cursor=pointer]
+          - button "IA" [ref=f1e168] [cursor=pointer]
+        - generic [ref=f1e169]:
+          - generic [ref=f1e170]:
+            - heading "WhatsApp Business" [level=2] [ref=f1e171]
+            - generic [ref=f1e172]: Sin configurar
+          - paragraph [ref=f1e177]: API oficial de Meta (Cloud API) — se obtiene desde Meta for Developers, en la app de WhatsApp Business.
+          - generic [ref=f1e178]:
+            - paragraph [ref=f1e179]: Webhook (pegar en Meta)
+            - paragraph [ref=f1e180]: /api/public/whatsapp/webhook
+          - generic [ref=f1e181]: Phone Number ID
+          - 'textbox "ej: 109876543210987" [ref=f1e182]'
+          - generic [ref=f1e183]: Business Account ID
+          - 'textbox "ej: 123456789012345" [ref=f1e184]'
+          - generic [ref=f1e185]: Access Token
+          - textbox "Token permanente de la app" [ref=f1e186]
+          - generic [ref=f1e187]: App Secret
+          - textbox "App Secret de la app de Meta" [ref=f1e188]
+          - paragraph [ref=f1e189]: Distinto del Access Token — es el "App Secret" de la app (Configuración básica en Meta for Developers), se usa para verificar que cada mensaje entrante realmente viene de Meta.
+          - generic [ref=f1e190]: Webhook Verify Token
+          - textbox "Elegí un token — lo vas a pegar en Meta al dar de alta el webhook" [ref=f1e191]
+          - paragraph [ref=f1e192]: "No es secreto — Meta lo usa una sola vez para confirmar que este endpoint es tuyo al configurar el webhook. Access Token y App Secret sí son secretos: una vez guardados nunca se muestran, solo se sobreescriben si escribís uno nuevo."
+          - button "Guardar" [ref=f1e193] [cursor=pointer]
+          - paragraph [ref=f1e194]: "Última actualización: 29/9/2026, 2:01:30"

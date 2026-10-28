@@ -1,0 +1,18 @@
+- generic [ref=f3e22]:
+  - link "InsiDesk Mesa de ayuda" [ref=f3e23] [cursor=pointer]:
+    - /url: /
+    - generic [ref=f3e27]:
+      - generic [ref=f3e28]: InsiDesk
+      - generic [ref=f3e29]: Mesa de ayuda
+  - generic [ref=f3e30]:
+    - heading "Iniciar sesión" [level=1] [ref=f3e31]
+    - generic [ref=f3e32]: Email
+    - textbox [ref=f3e33]
+    - generic [ref=f3e34]: Contraseña
+    - textbox [ref=f3e35]
+    - button "Ingresar" [ref=f3e36] [cursor=pointer]
+    - paragraph [ref=f3e37]: © 2026 InsiDesk
+  - paragraph [ref=f3e38]:
+    - text: ¿Necesitás ayuda y no tenés cuenta?
+    - link "Pedir soporte" [ref=f3e39] [cursor=pointer]:
+      - /url: /soporte

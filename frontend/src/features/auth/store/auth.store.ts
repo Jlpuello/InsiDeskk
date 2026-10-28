@@ -12,6 +12,10 @@ export interface AuthUser {
   // admin lo cambia en caliente (no hay refresh de perfil, mismo criterio que
   // ya se acepta hoy para el rol).
   permisos: string[];
+  // Ver features/account — admin lo exige (guard en App.tsx), tecnico/cliente
+  // lo activan si quieren. Igual que `rol`/`permisos`, queda desactualizado
+  // hasta el próximo login/acción de cuenta si cambia por otro medio.
+  twoFactorEnabled: boolean;
 }
 
 interface AuthState {

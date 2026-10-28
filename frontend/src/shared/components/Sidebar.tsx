@@ -14,6 +14,7 @@ import {
   Users,
   ScrollText,
   MessageCircle,
+  Monitor,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuthStore } from '../../features/auth/store/auth.store.ts';
@@ -56,6 +57,12 @@ const NAV_ITEMS: NavItem[] = [
   // conexión remota) — mismo criterio que Inventario, no es algo que un
   // cliente necesite ver directamente.
   { to: '/devices', label: 'Dispositivos', icon: Laptop, end: false, group: 'Recursos', adminOnly: false, staffOnly: true, clienteOnly: false },
+  // Conectarse por código a un equipo con el ejecutable portátil de Remotely
+  // corriendo, sin que esté registrado en Inventario (walk-in, empresa
+  // default/sin contrato) — ver RemoteConnectPage. Mismo permiso que
+  // "Iniciar sesión remota" en Dispositivos, es la misma capacidad aplicada a
+  // un equipo no registrado en vez de uno del inventario.
+  { to: '/remote-connect', label: 'Conexión remota', icon: Monitor, end: false, group: 'Recursos', adminOnly: false, staffOnly: true, clienteOnly: false, permission: 'devices:remote-connect' },
   // Inventario (routers/switches/APs/impresoras/DVRs/cámaras/control de
   // accesos, cargados a mano) queda fuera del alcance del cliente a
   // propósito — herramienta operativa interna, ver InventoryList. Dentro de

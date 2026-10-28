@@ -15,3 +15,4 @@ userRoutes.get('/', authorize('admin', 'tecnico'), asyncHandler(UserController.l
 userRoutes.post('/', authorize('admin'), asyncHandler(UserController.create));
 userRoutes.put('/:id', authorize('admin'), asyncHandler(UserController.update));
 userRoutes.delete('/:id', authorize('admin'), asyncHandler(UserController.remove));
+userRoutes.post('/:id/reset-2fa', authorize('admin'), asyncHandler(UserController.resetTwoFactor));

@@ -38,6 +38,10 @@ const removeSchema = Joi.object({
   motivo: Joi.string().min(5).max(500).required(),
 });
 
+const resetTwoFactorSchema = Joi.object({
+  motivo: Joi.string().min(5).max(500).required(),
+});
+
 export const UserController = {
   async list(req: Request, res: Response): Promise<void> {
     const empresaId = req.query.empresaId as string | undefined;
@@ -74,5 +78,13 @@ export const UserController = {
 
     await userService.remove(req.params.id, value.motivo);
     res.status(204).send();
+  },
+
+  async resetTwoFactor(req: Request, res: Response): Promise<void> {
+    const { error, value } = resetTwoFactorSchema.validate(req.body);
+    if (error) throw new AppError(error.message, 422);
+
+    const user = await userService.resetTwoFactor(req.params.id, value.motivo);
+    res.status(200).json({ data: user });
   },
 };

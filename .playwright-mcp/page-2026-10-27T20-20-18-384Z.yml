@@ -1,0 +1,41 @@
+- generic [ref=f7e3]:
+  - complementary [ref=f7e4]:
+    - generic [ref=f7e10]:
+      - paragraph [ref=f7e11]: InsiDesk
+      - paragraph [ref=f7e12]: Mesa de ayuda
+    - navigation [ref=f7e13]:
+      - generic [ref=f7e14]:
+        - paragraph [ref=f7e15]: Operación
+        - link "Dashboard" [ref=f7e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=f7e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=f7e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=f7e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=f7e32]:
+        - paragraph [ref=f7e33]: Recursos
+        - link "Dispositivos" [ref=f7e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=f7e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=f7e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=f7e51]:
+        - paragraph [ref=f7e52]: Comercial
+        - link "Cotizaciones" [ref=f7e53] [cursor=pointer]:
+          - /url: /quotes
+  - generic [ref=f7e57]:
+    - banner [ref=f7e58]:
+      - generic [ref=f7e59]:
+        - button "Mensajes" [ref=f7e61] [cursor=pointer]:
+          - generic [ref=f7e64]: "1"
+        - button "Notificaciones" [ref=f7e66] [cursor=pointer]
+        - button "J Juan Técnico" [ref=f7e72] [cursor=pointer]:
+          - generic [ref=f7e73]: J
+          - generic [ref=f7e74]:
+            - paragraph [ref=f7e75]: Juan
+            - paragraph [ref=f7e76]: Técnico
+    - main [ref=f7e77]:
+      - paragraph [ref=f7e78]: Cargando mensajes...

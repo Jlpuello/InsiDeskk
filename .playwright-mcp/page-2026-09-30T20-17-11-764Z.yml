@@ -1,0 +1,89 @@
+- generic [ref=e44]:
+  - complementary [ref=e45]:
+    - generic [ref=e51]:
+      - paragraph [ref=e52]: InsiDesk
+      - paragraph [ref=e53]: Mesa de ayuda
+    - navigation [ref=e54]:
+      - generic [ref=e55]:
+        - paragraph [ref=e56]: Operación
+        - link "Dashboard" [ref=e57] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=e63] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=e66] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=e70] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=e73]:
+        - paragraph [ref=e74]: Recursos
+        - link "Dispositivos" [ref=e75] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=e78] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=e81] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=e92]:
+        - paragraph [ref=e93]: Comercial
+        - link "Cotizaciones" [ref=e94] [cursor=pointer]:
+          - /url: /quotes
+      - generic [ref=e98]:
+        - paragraph [ref=e99]: Administración
+        - link "Empresas" [ref=e100] [cursor=pointer]:
+          - /url: /companies
+        - link "Usuarios" [ref=e105] [cursor=pointer]:
+          - /url: /users
+        - link "Agentes" [ref=e111] [cursor=pointer]:
+          - /url: /agents
+        - link "Logs" [ref=e115] [cursor=pointer]:
+          - /url: /logs
+        - link "Configuración" [ref=e119] [cursor=pointer]:
+          - /url: /settings
+  - generic [ref=e123]:
+    - banner [ref=e124]:
+      - generic [ref=e125]:
+        - button "Mensajes" [ref=e127] [cursor=pointer]
+        - button "Notificaciones" [ref=e131] [cursor=pointer]
+        - generic [ref=e136]:
+          - generic [ref=e137]: A
+          - generic [ref=e138]:
+            - paragraph [ref=e139]: Admin
+            - paragraph [ref=e140]: Admin
+          - button "Cerrar sesión" [ref=e141] [cursor=pointer]
+    - main [ref=e145]:
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - heading "Tickets" [level=1] [ref=e148]
+          - button "Nuevo ticket" [ref=e149] [cursor=pointer]
+        - generic [ref=e151]:
+          - combobox [ref=e152]:
+            - option "Sin cerrar" [selected]
+            - option "Todos los estados"
+            - option "Abierto"
+            - option "En progreso"
+            - option "En espera"
+            - option "Esperando aprobación"
+            - option "Cerrado"
+            - option "Cancelado"
+          - combobox [ref=e153]:
+            - option "Toda prioridad" [selected]
+            - option "baja"
+            - option "media"
+            - option "alta"
+            - option "critica"
+          - combobox [ref=e154]:
+            - option "Toda categoría" [selected]
+            - option "CCTV"
+            - option "Conexion"
+            - option "Hardware"
+            - option "Software"
+          - combobox [ref=e155]:
+            - option "Todo asignado" [selected]
+            - option "Sin asignar"
+            - option "Smoke Test"
+            - option "Smoke Test"
+            - option "Smoke Test"
+            - option "Smoke Test"
+            - option "Smoke Test"
+            - option "Admin"
+            - option "Juan"
+        - paragraph [ref=e156]: Cargando tickets...

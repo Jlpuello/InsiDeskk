@@ -1,0 +1,23 @@
+- generic [ref=e3]:
+  - paragraph [ref=e7]: Soporte remoto en minutos
+  - paragraph [ref=e12]: Equipo certificado
+  - paragraph [ref=e17]: Disponibilidad 24/7
+  - paragraph [ref=e24]: Atención personalizada
+  - generic [ref=e26]:
+    - link "InsiDesk Mesa de ayuda" [ref=e27] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e31]:
+        - generic [ref=e32]: InsiDesk
+        - generic [ref=e33]: Mesa de ayuda
+    - generic [ref=e34]:
+      - heading "Iniciar sesión" [level=1] [ref=e35]
+      - generic [ref=e36]: Email
+      - textbox [ref=e37]
+      - generic [ref=e38]: Contraseña
+      - textbox [ref=e39]
+      - button "Ingresar" [ref=e40] [cursor=pointer]
+      - paragraph [ref=e41]: © 2026 InsiDesk
+    - paragraph [ref=e42]:
+      - text: ¿Necesitás ayuda y no tenés cuenta?
+      - link "Pedir soporte" [ref=e43] [cursor=pointer]:
+        - /url: /soporte

@@ -1,4 +1,4 @@
-import { Prisma, type Ticket, type TicketStatus } from '@prisma/client';
+import { Prisma, type Ticket, type TicketPriority, type TicketStatus } from '@prisma/client';
 import { getPrismaClient } from '../../../shared/prisma/client.js';
 import { safeUserSelect } from '../../../shared/prisma/safe-select.js';
 import { logger } from '../../../shared/utils/logger.js';
@@ -135,6 +135,41 @@ export class TicketRepository {
     }
 
     return base;
+  }
+
+  // Para el gráfico de barras "Tickets por prioridad" del Dashboard — mismo
+  // criterio que countByStatus (groupBy + relleno de valores en 0).
+  async countByPriority(empresaId?: string): Promise<Record<TicketPriority, number>> {
+    const groups = await this.prisma.ticket.groupBy({
+      by: ['prioridad'],
+      where: empresaId ? { empresaId } : undefined,
+      _count: { prioridad: true },
+    });
+
+    const base: Record<TicketPriority, number> = { baja: 0, media: 0, alta: 0, critica: 0 };
+    for (const group of groups) {
+      base[group.prioridad] = group._count.prioridad;
+    }
+    return base;
+  }
+
+  // Para el gráfico de tendencia del Dashboard — Prisma no soporta agrupar
+  // por fecha truncada vía groupBy (solo por columnas reales), así que esto
+  // es SQL crudo. "createdAt" va entre comillas porque la columna es
+  // camelCase (confirmado contra la tabla real, \d tickets) — Postgres
+  // pliega a minúsculas un identificador sin comillas, así que sin ellas
+  // apuntaría a una columna "createdat" inexistente. Solo trae los días CON
+  // al menos un ticket — el relleno de días en 0 se hace en el service.
+  async countByDay(empresaId: string | undefined, days: number): Promise<{ date: string; count: number }[]> {
+    const rows = await this.prisma.$queryRaw<{ date: Date; count: bigint }[]>`
+      SELECT DATE("createdAt") AS date, COUNT(*)::bigint AS count
+      FROM tickets
+      WHERE "createdAt" >= NOW() - (INTERVAL '1 day' * ${days})
+      ${empresaId ? Prisma.sql`AND empresa_id = ${empresaId}` : Prisma.empty}
+      GROUP BY DATE("createdAt")
+      ORDER BY date ASC
+    `;
+    return rows.map((r) => ({ date: r.date.toISOString().slice(0, 10), count: Number(r.count) }));
   }
 
   // Consultas específicas

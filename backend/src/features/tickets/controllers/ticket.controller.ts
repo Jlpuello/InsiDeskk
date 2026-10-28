@@ -135,6 +135,19 @@ export const TicketController = {
     res.status(200).json({ data: stats });
   },
 
+  // Gráficos del Dashboard — ver TicketService.getPriorityBreakdown/getTicketTrend.
+  async statsByPriority(req: Request, res: Response): Promise<void> {
+    const { empresaId } = req.query as { empresaId?: string };
+    const stats = await ticketService.getPriorityBreakdown(empresaId);
+    res.status(200).json({ data: stats });
+  },
+
+  async statsTrend(req: Request, res: Response): Promise<void> {
+    const { empresaId } = req.query as { empresaId?: string };
+    const stats = await ticketService.getTicketTrend(empresaId, 14);
+    res.status(200).json({ data: stats });
+  },
+
   // KPI "Mis tickets" del Dashboard — cuenta del propio usuario logueado,
   // no toma empresaId ni ningún otro filtro por query.
   async myOpenCount(_req: Request, res: Response): Promise<void> {

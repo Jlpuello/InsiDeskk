@@ -1,0 +1,103 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e10]:
+      - paragraph [ref=e11]: InsiDesk
+      - paragraph [ref=e12]: Mesa de ayuda
+    - navigation [ref=e13]:
+      - generic [ref=e14]:
+        - paragraph [ref=e15]: Operación
+        - link "Dashboard" [ref=e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=e32]:
+        - paragraph [ref=e33]: Recursos
+        - link "Dispositivos" [ref=e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=e51]:
+        - paragraph [ref=e52]: Comercial
+        - link "Cotizaciones" [ref=e53] [cursor=pointer]:
+          - /url: /quotes
+      - generic [ref=e57]:
+        - paragraph [ref=e58]: Administración
+        - link "Empresas" [ref=e59] [cursor=pointer]:
+          - /url: /companies
+        - link "Usuarios" [ref=e64] [cursor=pointer]:
+          - /url: /users
+        - link "Agentes" [ref=e70] [cursor=pointer]:
+          - /url: /agents
+        - link "Logs" [ref=e74] [cursor=pointer]:
+          - /url: /logs
+        - link "Configuración" [ref=e78] [cursor=pointer]:
+          - /url: /settings
+  - generic [ref=e82]:
+    - banner [ref=e83]:
+      - generic [ref=e84]:
+        - button "Mensajes" [ref=e86] [cursor=pointer]
+        - button "Notificaciones" [ref=e90] [cursor=pointer]
+        - generic [ref=e95]:
+          - generic [ref=e96]: A
+          - generic [ref=e97]:
+            - paragraph [ref=e98]: Admin
+            - paragraph [ref=e99]: Admin
+          - button "Cerrar sesión" [ref=e100] [cursor=pointer]
+    - main [ref=e104]:
+      - generic [ref=e106]:
+        - heading "Mensajes" [level=1] [ref=e107]
+        - paragraph [ref=e108]: Conversaciones con gente sin acceso al portal, mensajes directos y canales con tu equipo — todo en un solo lugar.
+        - generic [ref=e109]:
+          - generic [ref=e110]:
+            - generic [ref=e111]:
+              - textbox "Buscar..." [ref=e113]
+              - button "Nueva conversación directa" [ref=e114] [cursor=pointer]
+              - button "Nuevo canal" [ref=e117] [cursor=pointer]
+              - link "Configuración de mensajería (WhatsApp, chatbot, IA)" [ref=e119] [cursor=pointer]:
+                - /url: /inbox/settings
+            - group "Filtrar conversaciones" [ref=e123]:
+              - button "Todo" [pressed] [ref=e124] [cursor=pointer]
+              - button "No leídos" [ref=e125] [cursor=pointer]
+              - button "Externos" [ref=e126] [cursor=pointer]
+              - button "Equipo" [ref=e127] [cursor=pointer]
+            - generic [ref=e128]:
+              - button "J Juan 26/9 revisión visual del inbox" [ref=e129] [cursor=pointer]:
+                - generic [ref=e130]: J
+                - generic [ref=e131]:
+                  - generic [ref=e132]:
+                    - generic [ref=e133]: Juan
+                    - generic [ref=e134]: 26/9
+                  - generic [ref=e135]: revisión visual del inbox
+              - button "jorge puello 24/9 jorge puello" [active] [ref=e137] [cursor=pointer]:
+                - generic [ref=e142]:
+                  - generic [ref=e143]:
+                    - generic [ref=e144]: jorge puello
+                    - generic [ref=e145]: 24/9
+                  - generic [ref=e146]: jorge puello
+              - button "Jorge Leonardo Puello Coneo 24/9 jorge puello" [ref=e148] [cursor=pointer]:
+                - generic [ref=e153]:
+                  - generic [ref=e154]:
+                    - generic [ref=e155]: Jorge Leonardo Puello Coneo
+                    - generic [ref=e156]: 24/9
+                  - generic [ref=e157]: jorge puello
+          - generic [ref=e165]:
+            - generic [ref=e166]:
+              - generic [ref=e172]:
+                - paragraph [ref=e173]: jorge puello
+                - paragraph [ref=e174]: puelloconeo23@gmail.com
+              - generic [ref=e175]:
+                - generic [ref=e176]: Abierta
+                - button "Enviar app de soporte" [ref=e177] [cursor=pointer]
+                - button "Cerrar" [ref=e180] [cursor=pointer]
+            - generic [ref=e183]:
+              - paragraph [ref=e184]: problemas con word
+              - paragraph [ref=e185]: hace 10 días
+            - generic [ref=e186]:
+              - textbox "Escribí un mensaje..." [ref=e187]
+              - button "Enviar" [disabled] [ref=e188]

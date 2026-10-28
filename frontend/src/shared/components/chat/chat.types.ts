@@ -21,6 +21,11 @@ export interface ChatConversation {
   // de los dos, se usa la primera letra de `title`.
   avatarLabel?: string;
   avatarIcon?: ReactNode;
+  // Borde izquierdo de la fila en la lista (hex/rgb) — distingue el TIPO de
+  // conversación de un vistazo (WhatsApp vs chat web vs canal de equipo),
+  // sin tener que leer el ícono. undefined = sin acento (ej. un DM 1:1 de
+  // equipo, que ya no tiene nada más con quien confundirse en la lista).
+  accentColor?: string;
   unread?: boolean;
   // Para ordenar la lista (más reciente primero) — string ISO.
   updatedAt: string;

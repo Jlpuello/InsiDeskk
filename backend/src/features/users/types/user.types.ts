@@ -25,4 +25,7 @@ export interface UserSummary {
   empresaNombre?: string;
   nivel: number | null;
   permisos: string[];
+  // Para mostrar/ocultar el botón "Resetear 2FA" en Usuarios (admin) — ver
+  // UserService.resetTwoFactor.
+  twoFactorEnabled: boolean;
 }

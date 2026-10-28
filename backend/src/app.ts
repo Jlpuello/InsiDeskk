@@ -18,6 +18,7 @@ import { monitoringService } from './shared/monitoring/monitoring.service.js';
 import { env } from './config/env.js';
 
 import { authRoutes } from './features/auth/index.js';
+import { accountRoutes } from './features/account/index.js';
 import { ticketRoutes, publicTicketRoutes } from './features/tickets/index.js';
 import { deviceRoutes } from './features/devices/index.js';
 import { userRoutes } from './features/users/index.js';
@@ -132,6 +133,7 @@ export function createApp(): Application {
   app.use('/api/public/settings', settingsPublicRoutes);
 
   // Rutas protegidas (requieren JWT)
+  app.use('/api/account', verifyJWT, accountRoutes);
   app.use('/api/tickets', verifyJWT, ticketRoutes);
   app.use('/api/devices', verifyJWT, deviceRoutes);
   app.use('/api/users', verifyJWT, userRoutes);

@@ -12,10 +12,13 @@ import { InventoryDetail } from './features/inventory/components/InventoryDetail
 import { InventoryReport } from './features/inventory/components/InventoryReport.tsx';
 import { RootRoute } from './shared/components/RootRoute.tsx';
 import { SettingsPage } from './features/settings/components/SettingsPage.tsx';
+import { ChannelsSettingsPage } from './features/settings/components/ChannelsSettingsPage.tsx';
 import { CompaniesPage } from './features/companies/components/CompaniesPage.tsx';
 import { UsersPage } from './features/users/components/UsersPage.tsx';
 import { LogsPage } from './features/audit/components/LogsPage.tsx';
 import { AgentsPage } from './features/agents/components/AgentsPage.tsx';
+import { RemoteConnectPage } from './features/remotely/components/RemoteConnectPage.tsx';
+import { SecurityPage } from './features/account/components/SecurityPage.tsx';
 import { LoginPage } from './features/auth/components/LoginPage.tsx';
 import { PublicTicketForm } from './features/tickets/components/PublicTicketForm.tsx';
 import { PublicChatWidget } from './features/conversations/components/PublicChatWidget.tsx';
@@ -91,6 +94,7 @@ function App() {
       >
         <Route path="/tickets" element={<TicketList />} />
         <Route path="/tickets/:id" element={<TicketDetail />} />
+        <Route path="/account/security" element={<SecurityPage />} />
         <Route path="/activities" element={<ActivityList />} />
         <Route path="/activities/:id" element={<ActivityDetail />} />
         <Route
@@ -99,6 +103,14 @@ function App() {
             <StaffRoute>
               <MessagesPage />
             </StaffRoute>
+          }
+        />
+        <Route
+          path="/inbox/settings"
+          element={
+            <AdminRoute>
+              <ChannelsSettingsPage />
+            </AdminRoute>
           }
         />
         <Route
@@ -114,6 +126,14 @@ function App() {
           element={
             <StaffRoute>
               <DeviceDetail />
+            </StaffRoute>
+          }
+        />
+        <Route
+          path="/remote-connect"
+          element={
+            <StaffRoute permission="devices:remote-connect">
+              <RemoteConnectPage />
             </StaffRoute>
           }
         />
