@@ -13,6 +13,21 @@ import type { GlpiContactRequest, GlpiInventoryRequest } from '../types/glpi-age
 // agente real, no una elección nuestra.
 export const GlpiAgentPublicController = {
   async handle(req: Request, res: Response): Promise<void> {
+    // La primera vez que el agente habla con un server que no conoce, no
+    // sabe qué protocolo soporta y manda un PROLOG legacy en XML (ver
+    // glpi-json-protocol.readthedocs.io/en/latest/contact.html, sección
+    // "how the agent determines the server's supported content types") — acá
+    // solo entendemos JSON, así que express.json() ni parsea ese body
+    // (Content-Type no matchea) y req.body queda vacío. Respondiendo acá con
+    // el error "unsupported content-type" que define el protocolo, el agente
+    // aprende que este server solo habla JSON y de ahí en más manda CONTACT
+    // en JSON — sin esto, reintenta PROLOG en XML para siempre y el equipo
+    // nunca se registra (aunque el server sea perfectamente alcanzable).
+    if (!req.is('application/json')) {
+      res.status(415).json({ status: 'error', message: 'unsupported content-type', expiration: 24 });
+      return;
+    }
+
     const body = req.body as { action?: string; deviceid?: string };
 
     if (body.action === 'contact') {
