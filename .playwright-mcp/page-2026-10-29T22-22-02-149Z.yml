@@ -1,0 +1,85 @@
+- generic [ref=f4e3]:
+  - complementary [ref=f4e4]:
+    - generic [ref=f4e10]:
+      - paragraph [ref=f4e11]: InsiDesk
+      - paragraph [ref=f4e12]: Mesa de ayuda
+    - navigation [ref=f4e13]:
+      - generic [ref=f4e14]:
+        - paragraph [ref=f4e15]: Operación
+        - link "Dashboard" [ref=f4e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=f4e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=f4e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=f4e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=f4e32]:
+        - paragraph [ref=f4e33]: Recursos
+        - link "Dispositivos" [ref=f4e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=f4e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=f4e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=f4e51]:
+        - paragraph [ref=f4e52]: Comercial
+        - link "Cotizaciones" [ref=f4e53] [cursor=pointer]:
+          - /url: /quotes
+  - generic [ref=f4e57]:
+    - banner [ref=f4e58]:
+      - generic [ref=f4e59]:
+        - button "Mensajes" [ref=f4e61] [cursor=pointer]
+        - button "Notificaciones" [ref=f4e65] [cursor=pointer]:
+          - generic [ref=f4e78]: "2"
+        - button "J Juan Técnico" [ref=f4e71] [cursor=pointer]:
+          - generic [ref=f4e72]: J
+          - generic [ref=f4e73]:
+            - paragraph [ref=f4e74]: Juan
+            - paragraph [ref=f4e75]: Técnico
+    - main [ref=f4e76]:
+      - generic [ref=f4e156]:
+        - generic [ref=f4e157]:
+          - link "← Volver a dispositivos" [ref=f4e158] [cursor=pointer]:
+            - /url: /devices
+          - generic [ref=f4e159]:
+            - link "Ficha PDF" [ref=f4e160] [cursor=pointer]:
+              - /url: /devices/e11ad8a6-9ab9-41a8-a94a-05b8f1fc6371/report
+            - button "Editar" [ref=f4e165] [cursor=pointer]
+            - button "Eliminar" [ref=f4e169] [cursor=pointer]
+        - generic [ref=f4e173]:
+          - generic [ref=f4e174]:
+            - generic [ref=f4e179]:
+              - heading "EQUIPOJL" [level=1] [ref=f4e180]
+              - paragraph [ref=f4e181]: EQUIPOHP
+            - generic [ref=f4e182]:
+              - generic [ref=f4e183]: En línea
+              - generic [ref=f4e184]: IMPORMAR
+          - generic [ref=f4e185]:
+            - button "Iniciar sesión remota" [ref=f4e186] [cursor=pointer]
+            - button "Ejecutar script" [ref=f4e189] [cursor=pointer]
+            - generic [ref=f4e193]:
+              - button "Hardware" [ref=f4e194] [cursor=pointer]
+              - button "Red" [ref=f4e198] [cursor=pointer]
+              - button "Software" [ref=f4e204] [cursor=pointer]
+              - button "Sesiones remotas" [ref=f4e209] [cursor=pointer]
+              - button "Scripts ejecutados" [ref=f4e214] [cursor=pointer]
+          - generic [ref=f4e218]:
+            - generic [ref=f4e219]:
+              - term [ref=f4e220]: Usuario actual
+              - definition [ref=f4e221]: —
+            - generic [ref=f4e222]:
+              - term [ref=f4e223]: Sistema operativo
+              - definition [ref=f4e224]: Windows Microsoft Windows 10.0.26100
+            - generic [ref=f4e225]:
+              - term [ref=f4e226]: IP local
+              - definition [ref=f4e227]: 192.168.1.13
+            - generic [ref=f4e228]:
+              - term [ref=f4e229]: CPU / RAM / Disco
+              - definition [ref=f4e230]: 4 cores · 16 GB · 231 GB
+            - generic [ref=f4e231]:
+              - term [ref=f4e232]: ID Remotely
+              - definition [ref=f4e233]: d52cba35-1043-45b0-9b0a-55f0fcd726b1
+            - generic [ref=f4e234]:
+              - term [ref=f4e235]: Versión del agente
+              - definition [ref=f4e236]: 2024.08.07.0819

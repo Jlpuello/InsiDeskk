@@ -19,6 +19,7 @@ export function maskId(value?: string | null): string | null {
 
 interface SanitizableDevice {
   remotelyIdHash?: string | null;
+  glpiDeviceIdHash?: string | null;
   hwStorage?: unknown;
   hwStorageSerials?: string[] | null;
   [key: string]: unknown;
@@ -41,8 +42,8 @@ function attachStorageSerials(storage: unknown, serials?: string[] | null): unkn
 // ni identificadores, ver comentario arriba.
 export function sanitizeDevice<T extends SanitizableDevice>(
   device: T,
-): Omit<T, 'remotelyIdHash' | 'hwStorageSerials'> {
-  const { remotelyIdHash: _remotelyIdHash, hwStorageSerials, ...rest } = device;
+): Omit<T, 'remotelyIdHash' | 'glpiDeviceIdHash' | 'hwStorageSerials'> {
+  const { remotelyIdHash: _remotelyIdHash, glpiDeviceIdHash: _glpiDeviceIdHash, hwStorageSerials, ...rest } = device;
   return {
     ...rest,
     ...('hwStorage' in device && { hwStorage: attachStorageSerials(device.hwStorage, hwStorageSerials) }),

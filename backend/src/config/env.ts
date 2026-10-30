@@ -107,4 +107,17 @@ export const env = {
   // remotely-package-integrity.scheduler.ts) — una vez al día alcanza, no es
   // algo que cambie seguido.
   remotelyPackageCheckCron: process.env.REMOTELY_PACKAGE_CHECK_CRON ?? '0 7 * * *',
+
+  // Cron que marca "offline" los equipos de GLPI Agent (ver
+  // glpi-stale-devices.scheduler.ts) cuyo último inventario quedó más viejo
+  // que el umbral esperado — a diferencia de Remotely, GLPI Agent no tiene un
+  // poller en vivo (solo reporta cuando se ejecuta), así que sin este barrido
+  // un equipo apagado se queda marcado "online" para siempre. Cada 30 min
+  // alcanza: el intervalo típico de reporte del agente es de horas, no minutos.
+  glpiStaleDevicesCron: process.env.GLPI_STALE_DEVICES_CRON ?? '*/30 * * * *',
+  // Si un equipo de GLPI Agent no manda inventario en más de este tiempo, se
+  // considera offline — más del doble del ciclo de recontacto que le mandamos
+  // al agente (24h, ver glpi-agent.service.ts EXPIRATION_HOURS) para no
+  // marcarlo offline por una demora normal.
+  glpiStaleDevicesHours: Number(process.env.GLPI_STALE_DEVICES_HOURS ?? 48),
 } as const;

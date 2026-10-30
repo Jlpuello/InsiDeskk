@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import clsx from 'clsx';
-import { Building2, Pencil, ShieldAlert } from 'lucide-react';
+import { Boxes, Building2, Pencil, ShieldAlert } from 'lucide-react';
 import { Modal } from '../../../shared/components/Modal.tsx';
 import { MotivoModal } from '../../../shared/components/MotivoModal.tsx';
 import { Toggle } from '../../../shared/components/Toggle.tsx';
@@ -20,6 +20,7 @@ const EMPTY_FORM: CompanyFormInput = {
   pais: '',
   contrato: '',
   remotelyGroupId: '',
+  glpiAgentTag: '',
 };
 
 export function CompaniesPage() {
@@ -80,6 +81,7 @@ export function CompaniesPage() {
       pais: company.pais ?? '',
       contrato: company.contrato ?? '',
       remotelyGroupId: company.remotelyGroupId ?? '',
+      glpiAgentTag: company.glpiAgentTag ?? '',
     });
     setFormError(null);
     setShowForm(true);
@@ -90,7 +92,11 @@ export function CompaniesPage() {
     setSaving(true);
     setFormError(null);
     try {
-      const input: CompanyFormInput = { ...form, remotelyGroupId: form.remotelyGroupId || null };
+      const input: CompanyFormInput = {
+        ...form,
+        remotelyGroupId: form.remotelyGroupId || null,
+        glpiAgentTag: form.glpiAgentTag || null,
+      };
       if (editing) {
         await companyApi.update(editing.id, input);
       } else {
@@ -214,13 +220,20 @@ export function CompaniesPage() {
                   <td className="px-4 py-3 font-mono text-gray-600">{company.nit ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-600">{company.contrato ?? '—'}</td>
                   <td className="px-4 py-3">
-                    {company.remotelyGroupId ? (
-                      <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
-                        {groupName(company.remotelyGroupId) ?? company.remotelyGroupId}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">Sin mapear</span>
-                    )}
+                    <div className="flex flex-wrap items-center gap-1">
+                      {company.remotelyGroupId ? (
+                        <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                          {groupName(company.remotelyGroupId) ?? company.remotelyGroupId}
+                        </span>
+                      ) : (
+                        !company.glpiAgentTag && <span className="text-gray-400">Sin mapear</span>
+                      )}
+                      {company.glpiAgentTag && (
+                        <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">
+                          GLPI: {company.glpiAgentTag}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -391,6 +404,24 @@ export function CompaniesPage() {
                   No se pudieron cargar los grupos de Remotely — verificá la configuración en Configuración.
                 </p>
               )}
+            </div>
+
+            <div>
+              <label className="mb-1 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                <Boxes className="h-4 w-4 text-gray-400" />
+                Tag de GLPI Agent
+              </label>
+              <input
+                type="text"
+                value={form.glpiAgentTag ?? ''}
+                onChange={(e) => setForm({ ...form, glpiAgentTag: e.target.value })}
+                placeholder="Ej: impormar"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                Para equipos sin Remotely (sin control remoto) que reportan inventario con GLPI Agent — instalalo con{' '}
+                <code className="rounded bg-gray-100 px-1 py-0.5">--tag={form.glpiAgentTag || '<este-valor>'}</code>.
+              </p>
             </div>
 
             {formError && <p className="text-sm text-red-600">{formError}</p>}

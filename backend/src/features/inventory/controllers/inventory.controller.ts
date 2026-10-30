@@ -32,6 +32,10 @@ const createSchema = Joi.object({
   notasConfiguracion: Joi.string().max(4000).empty(''),
   notas: Joi.string().max(2000).empty(''),
   atributos: Joi.object().unknown(true),
+  // Árbol de conexión del Mapa — ver InventoryService.update. allow(null)
+  // es "desconectar" (vuelve a ser raíz); solo tiene sentido en update, pero
+  // se declara acá porque updateSchema se deriva de este con `.fork(...)`.
+  conectadoAId: Joi.string().uuid().allow(null),
 });
 
 const updateSchema = createSchema.fork(Object.keys(createSchema.describe().keys), (s) => s.optional()).fork(

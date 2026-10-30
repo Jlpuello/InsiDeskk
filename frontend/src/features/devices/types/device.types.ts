@@ -71,6 +71,15 @@ export interface Device {
   // endurecimiento de permisos del agente — null si se instaló sin ese .bat,
   // o si el paso de endurecimiento falló.
   agentHardenedAt?: string | null;
+  // Árbol de conexión del Mapa de Inventario — a qué InventoryEquipment
+  // (switch/AP/router) está conectado este PC. null = sin ubicar en el mapa.
+  conectadoAId?: string | null;
+  // Presente solo si este equipo reporta vía GLPI Agent (segunda fuente de
+  // inventario, sin control remoto — ver features/glpi-agent en el backend)
+  // en vez de (o además de) Remotely.
+  glpiDeviceId?: string | null;
+  glpiTag?: string | null;
+  ultimoInventarioGlpi?: string | null;
 }
 
 // Forma coincide con features/remotely/types/remotely.types.ts#RamModuleInfo

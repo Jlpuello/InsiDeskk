@@ -110,12 +110,16 @@ export class CompanyService {
     return company;
   }
 
-  // El poller de Remotely (remotely.service.ts) cachea el mapeo grupo→empresa
-  // 5 min — sin esto, cambiar el mapeo desde la UI tardaría hasta 5 min en
+  // El poller de Remotely (remotely.service.ts) y el endpoint de contacto de
+  // GLPI Agent (glpi-agent.service.ts) cachean su mapeo grupo/tag→empresa 5
+  // min — sin esto, cambiar el mapeo desde la UI tardaría hasta 5 min en
   // reflejarse en la próxima alta/reasignación automática de un equipo.
   private async invalidateGroupMapIfNeeded(input: CreateCompanyInput | UpdateCompanyInput): Promise<void> {
     if ('remotelyGroupId' in input) {
       await cacheService.delete(CacheKeys.companiesByRemotelyGroup);
+    }
+    if ('glpiAgentTag' in input) {
+      await cacheService.delete(CacheKeys.companiesByGlpiTag);
     }
   }
 

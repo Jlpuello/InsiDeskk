@@ -14,7 +14,11 @@ export interface CreateDeviceDTO {
   discoGb?: number;
 }
 
-export type UpdateDeviceDTO = Partial<Omit<CreateDeviceDTO, 'empresaId'>>;
+export type UpdateDeviceDTO = Partial<Omit<CreateDeviceDTO, 'empresaId'>> & {
+  // Árbol de conexión del Mapa de Inventario — a qué InventoryEquipment
+  // (switch/AP/router) está conectado este PC. Ver DeviceService.update.
+  conectadoAId?: string | null;
+};
 
 export interface DeviceDrive {
   name: string | null;

@@ -296,6 +296,7 @@ export function InventoryList() {
             empresaNombre={resolveEmpresaNombre()}
             onOpenEquipment={(id) => navigate(`/inventory/${id}`)}
             onOpenDevice={(id) => navigate(`/devices/${id}`)}
+            onReload={() => load(filters)}
           />
         )
       ) : items.length === 0 ? (

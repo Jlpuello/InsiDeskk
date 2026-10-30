@@ -48,6 +48,13 @@ export const deviceApi = {
     return data.data;
   },
 
+  // Árbol de conexión del Mapa de Inventario (ver InventoryTopologyView) —
+  // null desconecta (vuelve a quedar sin ubicar en el mapa).
+  async updateConnection(id: string, conectadoAId: string | null): Promise<Device> {
+    const { data } = await apiClient.put<{ data: Device }>(`/devices/${id}`, { conectadoAId });
+    return data.data;
+  },
+
   // Acción crítica — el backend exige motivo y la audita (ver
   // DeviceService.remove).
   async remove(id: string, motivo: string): Promise<void> {

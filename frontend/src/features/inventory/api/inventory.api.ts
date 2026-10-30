@@ -29,6 +29,13 @@ export const inventoryApi = {
     return data.data;
   },
 
+  // Árbol de conexión del Mapa de Inventario — null desconecta (vuelve a ser
+  // raíz, cuelga de "Red de {empresa}" en la UI).
+  async updateConnection(id: string, conectadoAId: string | null): Promise<InventoryEquipment> {
+    const { data } = await apiClient.put<{ data: InventoryEquipment }>(`/inventory/${id}`, { conectadoAId });
+    return data.data;
+  },
+
   async remove(id: string): Promise<void> {
     await apiClient.delete(`/inventory/${id}`);
   },

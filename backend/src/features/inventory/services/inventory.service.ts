@@ -2,7 +2,7 @@ import type { InventoryEquipmentStatus, Prisma } from '@prisma/client';
 import { inventoryRepository } from '../repositories/inventory.repository.js';
 import { deviceRepository, type DeviceStatus } from '../../devices/index.js';
 import { resolveEmpresaId, assertOwnCompanyOrAdmin } from '../../../shared/security/tenant-scope.js';
-import { NotFoundError } from '../../../shared/utils/error.handler.js';
+import { AppError, NotFoundError } from '../../../shared/utils/error.handler.js';
 import { buildInventoryWorkbook } from './inventory-export.service.js';
 import type {
   CreateInventoryEquipmentDTO,
@@ -27,7 +27,9 @@ function buildDeviceWhere(filters: InventoryListFilters, empresaId?: string): Pr
   const { estado, search } = filters;
   return {
     ...(empresaId && { empresaId }),
-    ...(estado && DEVICE_ESTADOS.has(estado) && { estado: estado as DeviceStatus }),
+    // Sin filtro explícito, los dados de baja (DeviceService.remove) no
+    // aparecen acá tampoco — mismo criterio que DeviceService.list.
+    estado: estado && DEVICE_ESTADOS.has(estado) ? (estado as DeviceStatus) : { not: 'inactivo' },
     ...(search && {
       OR: [
         { nombre: { contains: search, mode: 'insensitive' } },
@@ -94,13 +96,42 @@ export class InventoryService {
   }
 
   async update(id: string, data: UpdateInventoryEquipmentDTO) {
-    await this.getById(id); // 404 antes que Prisma tire P2025 como 500
+    const existing = await this.getById(id); // 404 antes que Prisma tire P2025 como 500
 
-    const { atributos, ...rest } = data;
+    const { atributos, conectadoAId, ...rest } = data;
+
+    if (conectadoAId !== undefined && conectadoAId !== null) {
+      const parent = await this.getById(conectadoAId);
+      if (parent.empresaId !== existing.empresaId) {
+        throw new AppError('No se puede conectar a un equipo de otra empresa', 422);
+      }
+      await this.assertNoCycle(id, conectadoAId);
+    }
+
     return inventoryRepository.update(id, {
       ...rest,
       ...(atributos !== undefined && { atributos: atributos as never }),
+      ...(conectadoAId !== undefined && {
+        conectadoA: conectadoAId ? { connect: { id: conectadoAId } } : { disconnect: true },
+      }),
     });
+  }
+
+  // Evita ciclos (A conectado a B conectado a A) y que un equipo se conecte a
+  // sí mismo — camina hacia arriba desde el padre propuesto; si en el camino
+  // aparece `id`, ese padre ya es (indirectamente) hijo de este equipo.
+  private async assertNoCycle(id: string, parentId: string): Promise<void> {
+    if (parentId === id) throw new AppError('Un equipo no puede conectarse a sí mismo', 422);
+
+    let currentId: string | null = parentId;
+    const visited = new Set<string>();
+    while (currentId) {
+      if (currentId === id) throw new AppError('Esa conexión crearía un ciclo', 422);
+      if (visited.has(currentId)) break; // ciclo preexistente (no debería pasar): corta para no loopear infinito
+      visited.add(currentId);
+      const parent = await inventoryRepository.findById(currentId);
+      currentId = parent?.conectadoAId ?? null;
+    }
   }
 
   async remove(id: string): Promise<void> {

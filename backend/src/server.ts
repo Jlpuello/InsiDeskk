@@ -13,6 +13,7 @@ import { backupService } from './shared/backup/backup.service.js';
 import { activityRecurrenceScheduler } from './features/activities/index.js';
 import { quoteExpirationScheduler } from './features/quotes/index.js';
 import { remotelyPackageIntegrityScheduler } from './features/remotely/index.js';
+import { glpiStaleDevicesScheduler } from './features/glpi-agent/index.js';
 import { registerConversationRealtime } from './features/conversations/index.js';
 import { registerTeamChatRealtime } from './features/team-chat/index.js';
 import { initSocketServer } from './shared/realtime/socket.server.js';
@@ -43,6 +44,7 @@ async function startServer(): Promise<void> {
     activityRecurrenceScheduler.start();
     quoteExpirationScheduler.start();
     remotelyPackageIntegrityScheduler.start();
+    glpiStaleDevicesScheduler.start();
 
     const app = createApp();
     // http.Server explícito (en vez de que app.listen() lo cree solo) para
@@ -70,6 +72,7 @@ async function startServer(): Promise<void> {
       activityRecurrenceScheduler.stop();
       quoteExpirationScheduler.stop();
       remotelyPackageIntegrityScheduler.stop();
+      glpiStaleDevicesScheduler.stop();
       server.close();
 
       await shutdownNotificationQueues();

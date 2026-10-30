@@ -1,0 +1,75 @@
+- generic [ref=f2e3]:
+  - complementary [ref=f2e4]:
+    - generic [ref=f2e10]:
+      - paragraph [ref=f2e11]: InsiDesk
+      - paragraph [ref=f2e12]: Mesa de ayuda
+    - navigation [ref=f2e13]:
+      - generic [ref=f2e14]:
+        - paragraph [ref=f2e15]: Operación
+        - link "Dashboard" [ref=f2e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=f2e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=f2e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=f2e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=f2e32]:
+        - paragraph [ref=f2e33]: Recursos
+        - link "Dispositivos" [ref=f2e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=f2e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=f2e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=f2e51]:
+        - paragraph [ref=f2e52]: Comercial
+        - link "Cotizaciones" [ref=f2e53] [cursor=pointer]:
+          - /url: /quotes
+  - generic [ref=f2e57]:
+    - banner [ref=f2e58]:
+      - generic [ref=f2e59]:
+        - button "Mensajes" [ref=f2e61] [cursor=pointer]
+        - button "Notificaciones" [ref=f2e65] [cursor=pointer]:
+          - generic [ref=f2e94]: "2"
+        - button "J Juan Técnico" [ref=f2e71] [cursor=pointer]:
+          - generic [ref=f2e72]: J
+          - generic [ref=f2e73]:
+            - paragraph [ref=f2e74]: Juan
+            - paragraph [ref=f2e75]: Técnico
+    - main [ref=f2e76]:
+      - generic [ref=f2e166]:
+        - generic [ref=f2e167]:
+          - link "← Volver a dispositivos" [ref=f2e168] [cursor=pointer]:
+            - /url: /devices
+          - generic [ref=f2e169]:
+            - link "Ficha PDF" [ref=f2e170] [cursor=pointer]:
+              - /url: /devices/6a82fb5d-3c47-4cb6-b1c8-c8f115c62e72/report
+            - button "Editar" [ref=f2e175] [cursor=pointer]
+            - button "Eliminar" [ref=f2e179] [cursor=pointer]
+        - generic [ref=f2e183]:
+          - generic [ref=f2e184]:
+            - generic [ref=f2e189]:
+              - heading "PC-GLPI-TEST01" [level=1] [ref=f2e190]
+              - paragraph [ref=f2e191]: PC-GLPI-TEST01
+            - generic [ref=f2e192]: En línea
+          - button "Ejecutar script" [ref=f2e195] [cursor=pointer]
+          - generic [ref=f2e198]:
+            - generic [ref=f2e199]:
+              - term [ref=f2e200]: Usuario actual
+              - definition [ref=f2e201]: —
+            - generic [ref=f2e202]:
+              - term [ref=f2e203]: Sistema operativo
+              - definition [ref=f2e204]: Windows Microsoft Windows 11 Pro
+            - generic [ref=f2e205]:
+              - term [ref=f2e206]: IP local
+              - definition [ref=f2e207]: 192.168.1.50
+            - generic [ref=f2e208]:
+              - term [ref=f2e209]: CPU / RAM / Disco
+              - definition [ref=f2e210]: 8 cores · 16 GB · 500 GB
+            - generic [ref=f2e211]:
+              - term [ref=f2e212]: ID Remotely
+              - definition [ref=f2e213]: —
+            - generic [ref=f2e214]:
+              - term [ref=f2e215]: GLPI Agent
+              - definition [ref=f2e216]: impormarúltimo inventario 29/10/2026, 5:17:34 p.m.

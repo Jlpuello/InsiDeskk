@@ -36,6 +36,9 @@ export interface InventoryEquipment {
   notasConfiguracion?: string | null;
   notas?: string | null;
   atributos?: Record<string, unknown> | null;
+  // Árbol de conexión del Mapa — a qué otro equipo de la misma empresa está
+  // conectado este. null = raíz (cuelga de "Red de {empresa}" en la UI).
+  conectadoAId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

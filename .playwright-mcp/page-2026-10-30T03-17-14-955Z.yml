@@ -1,0 +1,40 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e10]:
+      - paragraph [ref=e11]: InsiDesk
+      - paragraph [ref=e12]: Mesa de ayuda
+    - navigation [ref=e13]:
+      - generic [ref=e14]:
+        - paragraph [ref=e15]: Operación
+        - link "Dashboard" [ref=e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=e32]:
+        - paragraph [ref=e33]: Recursos
+        - link "Dispositivos" [ref=e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=e51]:
+        - paragraph [ref=e52]: Comercial
+        - link "Cotizaciones" [ref=e53] [cursor=pointer]:
+          - /url: /quotes
+  - generic [ref=e57]:
+    - banner [ref=e58]:
+      - generic [ref=e59]:
+        - button "Mensajes" [ref=e61] [cursor=pointer]
+        - button "Notificaciones" [ref=e65] [cursor=pointer]
+        - button "J Juan Técnico" [ref=e71] [cursor=pointer]:
+          - generic [ref=e72]: J
+          - generic [ref=e73]:
+            - paragraph [ref=e74]: Juan
+            - paragraph [ref=e75]: Técnico
+    - main [ref=e76]:
+      - paragraph [ref=e77]: Cargando dispositivos...

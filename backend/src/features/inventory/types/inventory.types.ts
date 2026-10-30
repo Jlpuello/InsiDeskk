@@ -19,6 +19,9 @@ export interface CreateInventoryEquipmentDTO {
   notasConfiguracion?: string;
   notas?: string;
   atributos?: Record<string, unknown>;
+  // Árbol de conexión del Mapa — a qué otro equipo de la misma empresa está
+  // conectado este. null = raíz (cuelga de "Red de {empresa}" en la UI).
+  conectadoAId?: string | null;
 }
 
 export type UpdateInventoryEquipmentDTO = Partial<Omit<CreateInventoryEquipmentDTO, 'empresaId'>>;

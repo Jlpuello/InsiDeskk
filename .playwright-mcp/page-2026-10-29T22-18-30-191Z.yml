@@ -1,0 +1,61 @@
+- generic [ref=f2e3]:
+  - complementary [ref=f2e4]:
+    - generic [ref=f2e10]:
+      - paragraph [ref=f2e11]: InsiDesk
+      - paragraph [ref=f2e12]: Mesa de ayuda
+    - navigation [ref=f2e13]:
+      - generic [ref=f2e14]:
+        - paragraph [ref=f2e15]: Operación
+        - link "Dashboard" [ref=f2e16] [cursor=pointer]:
+          - /url: /
+        - link "Tickets" [ref=f2e22] [cursor=pointer]:
+          - /url: /tickets
+        - link "Actividades" [ref=f2e25] [cursor=pointer]:
+          - /url: /activities
+        - link "Mensajes" [ref=f2e29] [cursor=pointer]:
+          - /url: /inbox
+      - generic [ref=f2e32]:
+        - paragraph [ref=f2e33]: Recursos
+        - link "Dispositivos" [ref=f2e34] [cursor=pointer]:
+          - /url: /devices
+        - link "Conexión remota" [ref=f2e37] [cursor=pointer]:
+          - /url: /remote-connect
+        - link "Inventario" [ref=f2e40] [cursor=pointer]:
+          - /url: /inventory
+      - generic [ref=f2e51]:
+        - paragraph [ref=f2e52]: Comercial
+        - link "Cotizaciones" [ref=f2e53] [cursor=pointer]:
+          - /url: /quotes
+  - generic [ref=f2e57]:
+    - banner [ref=f2e58]:
+      - generic [ref=f2e59]:
+        - button "Mensajes" [ref=f2e61] [cursor=pointer]
+        - button "Notificaciones" [ref=f2e65] [cursor=pointer]
+        - button "J Juan Técnico" [ref=f2e71] [cursor=pointer]:
+          - generic [ref=f2e72]: J
+          - generic [ref=f2e73]:
+            - paragraph [ref=f2e74]: Juan
+            - paragraph [ref=f2e75]: Técnico
+    - main [ref=f2e76]:
+      - generic [ref=f2e77]:
+        - generic [ref=f2e78]:
+          - heading "Inventario" [level=1] [ref=f2e79]
+          - generic [ref=f2e80]:
+            - generic [ref=f2e81]:
+              - button "Lista" [ref=f2e82] [cursor=pointer]
+              - button "Mapa" [ref=f2e83] [cursor=pointer]
+            - button "Exportar" [ref=f2e84] [cursor=pointer]
+            - button "Nuevo equipo" [ref=f2e88] [cursor=pointer]
+        - generic [ref=f2e90]:
+          - textbox "Buscar por nombre, marca, modelo, ubicación..." [ref=f2e91]
+          - combobox [ref=f2e92]:
+            - option "Todo tipo" [selected]
+            - option "PC (agente)"
+            - option "Router"
+            - option "Switch"
+            - option "Access Point"
+            - option "Impresora"
+            - option "DVR"
+            - option "Cámara IP"
+            - option "Control de acceso"
+        - paragraph [ref=f2e93]: Cargando inventario...

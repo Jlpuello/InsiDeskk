@@ -19,6 +19,15 @@ export const CacheKeys = {
   // TTL largo (ver remotelyService.getOrganizationId()).
   remotelyOrganizationId: 'remotely:organization-id',
 
+  // Mapeo tag de GLPI Agent -> Company nuestra (Configuración → Empresas) —
+  // mismo criterio que companiesByRemotelyGroup, para la segunda fuente de
+  // inventario (ver features/glpi-agent).
+  companiesByGlpiTag: 'glpi-agent:companies-by-tag',
+  // deviceid de GLPI Agent -> empresaId, cacheado desde el CONTACT para
+  // resolver la empresa cuando llega el INVENTORY del mismo equipo (ver
+  // glpi-agent.service.ts) — TTL corto, se reconstruye en cada CONTACT.
+  glpiDeviceContact: (deviceid: string): string => `glpi-agent:contact:${deviceid}`,
+
   user: (id: string): string => `user:${id}`,
 
   session: (id: string): string => `session:${id}`,

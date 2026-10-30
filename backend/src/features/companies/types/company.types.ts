@@ -9,6 +9,7 @@ export interface CreateCompanyInput {
   pais?: string;
   contrato?: string;
   remotelyGroupId?: string | null;
+  glpiAgentTag?: string | null;
 }
 
 export type UpdateCompanyInput = Partial<CreateCompanyInput> & { activo?: boolean; verificado?: boolean };

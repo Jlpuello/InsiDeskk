@@ -30,6 +30,15 @@ export class DeviceRepository {
     });
   }
 
+  // Mismo criterio que findByRemotelyId: glpiDeviceId se guarda cifrado, se
+  // busca por su blind index.
+  async findByGlpiDeviceId(glpiDeviceId: string) {
+    return this.prisma.device.findUnique({
+      where: { glpiDeviceIdHash: encryptionService.blindIndex(glpiDeviceId) },
+      include: { empresa: true },
+    });
+  }
+
   async findMany(where?: Prisma.DeviceWhereInput, skip?: number, take?: number) {
     return this.prisma.device.findMany({
       where,
@@ -84,6 +93,18 @@ export class DeviceRepository {
     const result = await this.prisma.device.updateMany({
       where: { empresaId, hostname },
       data: { agentHardenedAt: hardenedAt },
+    });
+    return result.count;
+  }
+
+  // Barrido periódico (ver glpi-stale-devices.scheduler.ts): GLPI Agent no
+  // tiene poller en vivo como Remotely, así que un equipo apagado se queda
+  // "online" para siempre si nadie lo revisa — esto marca "offline" los que
+  // reportaron por última vez antes de `before` y no estaban ya offline.
+  async markStaleGlpiDevicesOffline(before: Date): Promise<number> {
+    const result = await this.prisma.device.updateMany({
+      where: { glpiDeviceIdHash: { not: null }, estado: { not: 'offline' }, ultimoContacto: { lt: before } },
+      data: { estado: 'offline' },
     });
     return result.count;
   }

@@ -16,6 +16,9 @@ const companySchema = Joi.object({
   // El <select> del formulario manda "" para "Ninguno" — se normaliza a null
   // más abajo, Joi solo necesita aceptar el string vacío acá.
   remotelyGroupId: Joi.string().allow('', null),
+  // Mismo criterio — tag de texto libre que el técnico configura al instalar
+  // GLPI Agent (ver features/glpi-agent).
+  glpiAgentTag: Joi.string().max(100).allow('', null),
 });
 
 const updateSchema = companySchema
@@ -41,7 +44,11 @@ export const CompanyController = {
     const { error, value } = companySchema.validate(req.body);
     if (error) throw new AppError(error.message, 422);
 
-    const company = await companyService.create({ ...value, remotelyGroupId: value.remotelyGroupId || null });
+    const company = await companyService.create({
+      ...value,
+      remotelyGroupId: value.remotelyGroupId || null,
+      glpiAgentTag: value.glpiAgentTag || null,
+    });
     res.status(201).json({ data: company });
   },
 
@@ -49,7 +56,9 @@ export const CompanyController = {
     const { error, value } = updateSchema.validate(req.body);
     if (error) throw new AppError(error.message, 422);
 
-    const data = 'remotelyGroupId' in value ? { ...value, remotelyGroupId: value.remotelyGroupId || null } : value;
+    const data = { ...value };
+    if ('remotelyGroupId' in value) data.remotelyGroupId = value.remotelyGroupId || null;
+    if ('glpiAgentTag' in value) data.glpiAgentTag = value.glpiAgentTag || null;
     const company = await companyService.update(req.params.id, data);
     res.status(200).json({ data: company });
   },

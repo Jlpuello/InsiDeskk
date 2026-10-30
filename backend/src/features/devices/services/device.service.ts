@@ -7,7 +7,8 @@ import { resolveEmpresaId, assertOwnCompanyOrAdmin } from '../../../shared/secur
 import { recordCriticalAction } from '../../../shared/security/critical-action.service.js';
 import { env } from '../../../config/env.js';
 import { logger } from '../../../shared/utils/logger.js';
-import { NotFoundError } from '../../../shared/utils/error.handler.js';
+import { AppError, NotFoundError } from '../../../shared/utils/error.handler.js';
+import { inventoryRepository } from '../../inventory/repositories/inventory.repository.js';
 import type {
   CreateDeviceDTO,
   DeviceTelemetry,
@@ -28,8 +29,10 @@ export class DeviceService {
       return cached;
     }
 
+    // Sin filtro explícito de estado, los dados de baja (ver remove()) no
+    // aparecen en la lista — mismo efecto visible que un borrado real.
     const devices = await deviceRepository.findMany(
-      { ...(empresaId && { empresaId }), ...(estado && { estado }) },
+      { ...(empresaId && { empresaId }), estado: estado ?? { not: 'inactivo' } },
       skip,
       take,
     );
@@ -173,7 +176,27 @@ export class DeviceService {
     // depender solo de que un futuro refactor siga llamando a getById primero.
     assertOwnCompanyOrAdmin(existing.empresaId);
 
-    const device = await deviceRepository.update(id, data);
+    const { conectadoAId, ...rest } = data;
+
+    // Árbol de conexión del Mapa de Inventario — a diferencia de
+    // InventoryEquipment.conectadoAId (self-relation, puede formar un ciclo),
+    // acá el destino SIEMPRE es un InventoryEquipment: un Device nunca puede
+    // ser el padre de otra cosa, así que no hay ciclo posible que validar,
+    // solo que el destino exista y sea de la misma empresa.
+    if (conectadoAId !== undefined && conectadoAId !== null) {
+      const parent = await inventoryRepository.findById(conectadoAId);
+      if (!parent) throw new NotFoundError('Equipo de inventario (destino de conexión)');
+      if (parent.empresaId !== existing.empresaId) {
+        throw new AppError('No se puede conectar a un equipo de otra empresa', 422);
+      }
+    }
+
+    const device = await deviceRepository.update(id, {
+      ...rest,
+      ...(conectadoAId !== undefined && {
+        conectadoA: conectadoAId ? { connect: { id: conectadoAId } } : { disconnect: true },
+      }),
+    });
     await cacheService.invalidatePattern(CachePatterns.devicesForCompany(device.empresaId));
     return device;
   }
@@ -181,11 +204,29 @@ export class DeviceService {
   // Borrado — acción crítica: exige motivo y queda auditado con detalle (ver
   // shared/security/critical-action.service.ts), igual criterio que aprobar/
   // rechazar una cotización.
+  //
+  // Un equipo con sesiones remotas o scripts ejecutados no se puede borrar
+  // físicamente: RemotelySession/RemotelyScriptExecution tienen onDelete:
+  // Restrict hacia Device (a propósito, para no perder ese historial) y
+  // Postgres tira P2003. En ese caso se da de baja (estado: 'inactivo', ya
+  // definido en el enum pero sin ningún flujo que lo usara) en vez de
+  // borrarse — mismo criterio que CompanyService.deactivate con activo:false.
+  // Un equipo sin historial (nunca tuvo sesión/script) sí se borra físico,
+  // como antes.
   async remove(id: string, motivo: string): Promise<void> {
     const device = await this.getById(id);
     assertOwnCompanyOrAdmin(device.empresaId);
 
-    await deviceRepository.delete(id);
+    try {
+      await deviceRepository.delete(id);
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
+        await deviceRepository.update(id, { estado: 'inactivo' });
+      } else {
+        throw err;
+      }
+    }
+
     await cacheService.invalidatePattern(CachePatterns.devicesForCompany(device.empresaId));
     await recordCriticalAction({ accion: 'DEVICE_DELETE', tabla: 'Device', registroId: id, motivo });
   }

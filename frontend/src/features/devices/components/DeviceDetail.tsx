@@ -150,6 +150,12 @@ export function DeviceDetail() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [device, setDevice] = useState<Device | null>(null);
+  // Un equipo que solo reporta por GLPI Agent (sin remotelyId) no tiene cómo
+  // iniciar sesión remota ni correr un script vía Remotely — esos botones
+  // solo tienen sentido si el equipo además tiene el agente de Remotely.
+  const hasRemotelyAgent = Boolean(device?.remotelyId);
+  const canConnectRemotely = canConnect && hasRemotelyAgent;
+  const canExecuteScriptRemotely = canExecuteScript && hasRemotelyAgent;
   const [liveStatus, setLiveStatus] = useState<DeviceStatus | null>(null);
   const [telemetry, setTelemetry] = useState<DeviceTelemetry | null>(null);
   const [history, setHistory] = useState<RemoteSessionHistoryEntry[]>([]);
@@ -434,9 +440,9 @@ export function DeviceDetail() {
           </div>
         </div>
 
-        {canUseRemotely && (
+        {(canConnectRemotely || canExecuteScriptRemotely) && (
           <div className="mb-4 flex flex-wrap items-center gap-2 border-b border-gray-100 pb-4">
-            {canConnect && (
+            {canConnectRemotely && (
               <button
                 onClick={handleConnect}
                 disabled={connecting}
@@ -446,7 +452,7 @@ export function DeviceDetail() {
                 {connecting ? 'Conectando...' : 'Iniciar sesión remota'}
               </button>
             )}
-            {canExecuteScript && (
+            {canExecuteScriptRemotely && (
               <button
                 onClick={() => setActiveModal('script')}
                 className="flex items-center gap-1.5 whitespace-nowrap rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -456,7 +462,7 @@ export function DeviceDetail() {
               </button>
             )}
 
-            {canConnect && (
+            {canConnectRemotely && (
               <>
                 <span className="mx-1 hidden h-6 w-px bg-gray-200 sm:block" aria-hidden="true" />
 
@@ -548,6 +554,17 @@ export function DeviceDetail() {
             <div>
               <dt className="text-gray-400">Versión del agente</dt>
               <dd className="text-gray-800">{device.agentVersion}</dd>
+            </div>
+          )}
+          {device.glpiDeviceId && (
+            <div>
+              <dt className="text-gray-400">GLPI Agent</dt>
+              <dd className="text-gray-800">
+                {device.glpiTag && <span className="mr-1 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">{device.glpiTag}</span>}
+                {device.ultimoInventarioGlpi
+                  ? `último inventario ${new Date(device.ultimoInventarioGlpi).toLocaleString()}`
+                  : 'sin inventario reciente'}
+              </dd>
             </div>
           )}
         </dl>

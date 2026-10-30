@@ -32,6 +32,15 @@ export class CompanyRepository {
     });
   }
 
+  // Mismo propósito que findAllMappedToRemotelyGroup, para la segunda fuente
+  // de inventario (GLPI Agent, ver features/glpi-agent).
+  async findAllMappedToGlpiTag(): Promise<Pick<Company, 'id' | 'glpiAgentTag'>[]> {
+    return this.prisma.company.findMany({
+      where: { glpiAgentTag: { not: null } },
+      select: { id: true, glpiAgentTag: true },
+    });
+  }
+
   // Usado por el formulario público de tickets/chat (sin login) para
   // identificar la empresa por NIT. Primero un match exacto (nit es
   // @unique, usa el índice); si no aparece, cae a nitMatches en memoria —

@@ -19,7 +19,13 @@ const createSchema = Joi.object({
   discoGb: Joi.number().integer().min(1),
 });
 
-const updateSchema = createSchema.fork(Object.keys(createSchema.describe().keys), (s) => s.optional());
+const updateSchema = createSchema
+  .fork(Object.keys(createSchema.describe().keys), (s) => s.optional())
+  .keys({
+    // Árbol de conexión del Mapa de Inventario — ver DeviceService.update.
+    // allow(null) es "desconectar" (vuelve a quedar sin ubicar en el mapa).
+    conectadoAId: Joi.string().uuid().allow(null),
+  });
 
 const removeSchema = Joi.object({
   motivo: Joi.string().min(5).max(500).required(),

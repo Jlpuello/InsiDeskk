@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger.js';
 // Nota: el hashing de password NO se hace acá — AuthService ya llama a
 // encryptionService.hashPassword() antes de crear el usuario (hashear dos
 // veces rompería el login). Este middleware encripta/desencripta en reposo:
-// - Device.ipLocal / ipPublica / remotelyId / hwUuid / hwSerialNumber
+// - Device.ipLocal / ipPublica / remotelyId / glpiDeviceId / hwUuid / hwSerialNumber
 // - Device.macAddresses / hwStorageSerials (arrays, cada elemento por separado)
 // - RemotelySession.remotelySessionId
 //
@@ -18,7 +18,7 @@ import { logger } from '../../utils/logger.js';
 // remotelyApiKeyId, en cambio, NO es secreto (Remotely lo muestra siempre en
 // su tabla de tokens) — se guarda en claro, sin pasar por este middleware.
 
-const DEVICE_ENCRYPTED_FIELDS = ['ipLocal', 'ipPublica', 'remotelyId', 'hwUuid', 'hwSerialNumber'] as const;
+const DEVICE_ENCRYPTED_FIELDS = ['ipLocal', 'ipPublica', 'remotelyId', 'glpiDeviceId', 'hwUuid', 'hwSerialNumber'] as const;
 const DEVICE_ENCRYPTED_ARRAY_FIELDS = ['macAddresses', 'hwStorageSerials'] as const;
 
 // InventoryEquipment (routers/switches/APs/impresoras/DVRs/cámaras IP/control
@@ -97,6 +97,9 @@ function encryptWriteData(model: string | undefined, data: Record<string, unknow
     // aunque el valor guardado ya no sea determinístico.
     if (data.remotelyId) {
       data.remotelyIdHash = encryptionService.blindIndex(data.remotelyId as string);
+    }
+    if (data.glpiDeviceId) {
+      data.glpiDeviceIdHash = encryptionService.blindIndex(data.glpiDeviceId as string);
     }
     for (const field of DEVICE_ENCRYPTED_FIELDS) {
       if (data[field]) {

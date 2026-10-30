@@ -16,6 +16,10 @@ export interface Company {
   // Grupo de Remotely asociado (Device.remotelyGroupId) — así los equipos de
   // ese grupo se dan de alta/reasignan solos bajo esta empresa.
   remotelyGroupId?: string | null;
+  // Tag configurado en GLPI Agent (--tag=<...>) para los equipos que
+  // reportan inventario por esa vía en vez de (o además de) Remotely — ver
+  // Device.glpiTag.
+  glpiAgentTag?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,4 +35,5 @@ export interface CompanyFormInput {
   pais?: string;
   contrato?: string;
   remotelyGroupId?: string | null;
+  glpiAgentTag?: string | null;
 }

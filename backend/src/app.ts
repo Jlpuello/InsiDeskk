@@ -36,6 +36,7 @@ import { chatbotRoutes, chatbotPublicRoutes } from './features/chatbot/index.js'
 import { whatsappPublicRoutes } from './features/whatsapp/index.js';
 import { aiChatPublicRoutes } from './features/ai/index.js';
 import { documentationTemplateRoutes } from './features/documentation-templates/index.js';
+import { glpiAgentRoutes } from './features/glpi-agent/index.js';
 
 export function createApp(): Application {
   const app = express();
@@ -114,6 +115,11 @@ export function createApp(): Application {
   // agente se aplicó bien (ver remotely.public.routes.ts) — sin login, igual
   // que los dos anteriores.
   app.use('/api/public/remotely', remotelyPublicRoutes);
+  // Segunda fuente de inventario (GLPI Agent — inventario-only, sin control
+  // remoto, ver features/glpi-agent): protocolo JSON de GLPI, sin login
+  // (lo llama el propio equipo con el agente instalado, igual que Remotely
+  // arriba). La "autenticación" es el tag configurado en el agente.
+  app.use('/api/public/glpi-agent', glpiAgentRoutes);
   // Widget de chat de la landing page /chat, sin login (ver
   // conversation.public.routes.ts).
   app.use('/api/public/conversations', publicConversationLimiter, conversationPublicRoutes);

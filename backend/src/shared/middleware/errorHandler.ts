@@ -33,6 +33,14 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
       res.status(409).json({ error: 'Ya existe un registro con ese valor único' });
       return;
     }
+    // Un borrado físico chocó con un registro relacionado protegido
+    // (onDelete: Restrict) — p.ej. historial de sesiones/scripts de un
+    // Device. Los flujos que ya conocen este caso lo manejan antes (ver
+    // DeviceService.remove); esto es la red de seguridad para el resto.
+    if (err.code === 'P2003') {
+      res.status(409).json({ error: 'No se puede eliminar: tiene registros relacionados que dependen de él' });
+      return;
+    }
   }
 
   logger.error(err.message, { stack: err.stack, path: req.originalUrl });

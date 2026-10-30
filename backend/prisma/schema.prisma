@@ -163,6 +163,14 @@ model Company {
   // sensible (es solo un ID de agrupación de Remotely), no cifrado.
   remotelyGroupId String? @unique @map("remotely_group_id")
 
+  // Mismo mecanismo que remotelyGroupId, para equipos que reportan vía GLPI
+  // Agent (inventario-only, sin control remoto — ver features/glpi-agent)
+  // en vez del agente de Remotely. El técnico configura este tag al instalar
+  // el agente (glpi-agent --tag=<este valor>); el endpoint público de
+  // contacto lo usa para resolver a qué empresa pertenece cada equipo, igual
+  // que remotelyGroupId resuelve por grupo. No es secreto, no cifrado.
+  glpiAgentTag String? @unique @map("glpi_agent_tag")
+
   // Relations
   users               User[]
   devices             Device[]
@@ -322,6 +330,26 @@ model Device {
   // POST /api/remotely/harden-report. null = nunca se instaló con el .bat que
   // genera InsiDesk, o el paso de endurecimiento falló.
   agentHardenedAt      DateTime?        @map("agent_hardened_at")
+  // Árbol de conexión del Mapa de Inventario — a qué equipo (switch/AP/
+  // router) está conectado este PC. null = sin ubicar en el árbol todavía
+  // (no aparece colgado de nada en el mapa). Ver InventoryEquipment.conectadoAId
+  // para la misma idea entre dos equipos de red.
+  conectadoAId         String?          @map("conectado_a_id")
+  conectadoA           InventoryEquipment? @relation("DeviceConnections", fields: [conectadoAId], references: [id], onDelete: SetNull)
+
+  // Equipos que reportan vía GLPI Agent (inventario-only, sin control
+  // remoto — ver features/glpi-agent) en vez de (o además de) Remotely. Mismo
+  // criterio de cifrado que remotelyId/remotelyIdHash: glpiDeviceId es el
+  // identificador que manda el propio agente (derivado de hardware), cifrado
+  // en reposo, buscable por su blind index. glpiTag es el tag configurado en
+  // el agente (ver Company.glpiAgentTag) — organizativo, no sensible, no
+  // cifrado, mismo criterio que remotelyTags. Un Device puede tener
+  // remotelyId, glpiDeviceId, ninguno (alta manual) o ambos si algún día se
+  // instalan los dos agentes en el mismo equipo.
+  glpiDeviceId         String?          @map("glpi_device_id")
+  glpiDeviceIdHash     String?          @unique @map("glpi_device_id_hash")
+  glpiTag              String?          @map("glpi_tag")
+  ultimoInventarioGlpi DateTime?        @map("ultimo_inventario_glpi")
 
   // Relations
   tickets             Ticket[]
@@ -334,6 +362,7 @@ model Device {
   @@index([empresaId])
   @@index([estado])
   @@index([remotelyId])
+  @@index([conectadoAId])
   @@map("devices")
 }
 
@@ -990,12 +1019,24 @@ model InventoryEquipment {
   // {puertas, capacidadUsuarios}. Sin tabla por tipo para no multiplicar
   // migraciones cada vez que un tipo necesita un campo nuevo.
   atributos          Json?
+  // Árbol de conexión del Mapa de Inventario (self-relation) — "este switch
+  // está conectado a este router". null = raíz del árbol (cuelga directo de
+  // "Red de {empresa}" en la UI, ver InventoryTopologyView). La validación de
+  // que no se arme un ciclo, y de que ambos pertenezcan a la misma empresa,
+  // vive en InventoryService (no se puede expresar en el schema).
+  conectadoAId       String?                  @map("conectado_a_id")
+  conectadoA         InventoryEquipment?      @relation("EquipmentConnections", fields: [conectadoAId], references: [id], onDelete: SetNull)
+  conectados         InventoryEquipment[]     @relation("EquipmentConnections")
+  // PCs con agente (Device) conectados a este equipo — ej. un PC conectado a
+  // este AP por wifi en vez de a un switch. Ver Device.conectadoAId.
+  dispositivosConectados Device[]             @relation("DeviceConnections")
   createdAt          DateTime                 @default(now())
   updatedAt          DateTime                 @updatedAt
 
   @@index([empresaId])
   @@index([tipo])
   @@index([estado])
+  @@index([conectadoAId])
   @@map("inventory_equipment")
 }
 
