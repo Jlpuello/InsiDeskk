@@ -14,17 +14,23 @@ import type { GlpiContactRequest, GlpiInventoryRequest } from '../types/glpi-age
 export const GlpiAgentPublicController = {
   async handle(req: Request, res: Response): Promise<void> {
     // La primera vez que el agente habla con un server que no conoce, no
-    // sabe qué protocolo soporta y manda un PROLOG legacy en XML (ver
-    // glpi-json-protocol.readthedocs.io/en/latest/contact.html, sección
-    // "how the agent determines the server's supported content types") — acá
-    // solo entendemos JSON, así que express.json() ni parsea ese body
-    // (Content-Type no matchea) y req.body queda vacío. Respondiendo acá con
-    // el error "unsupported content-type" que define el protocolo, el agente
-    // aprende que este server solo habla JSON y de ahí en más manda CONTACT
-    // en JSON — sin esto, reintenta PROLOG en XML para siempre y el equipo
-    // nunca se registra (aunque el server sea perfectamente alcanzable).
+    // sabe qué protocolo soporta y manda un PROLOG legacy en XML (heredado
+    // de OCS Inventory/FusionInventory) antes de animarse a mandar CONTACT
+    // en JSON. Los docs del protocolo JSON sugieren responder ese caso con
+    // un error 4xx "unsupported content-type" — probado contra un agente
+    // real (glpi-agent 1.21) y NO funciona: devolver 415 que no cambia nada,
+    // el agente solo loguea "communication error" y reintenta el mismo XML
+    // en el próximo ciclo para siempre. Revisando el código real del agente
+    // (HTTP::Client::OCS#send): si la respuesta no es 2xx, ni siquiera mira
+    // el cuerpo. Si SÍ es 2xx y el cuerpo es JSON (no parsea como XML), lo
+    // intenta leer como CONTACT — ahí es donde "aprende" que este server
+    // habla JSON y recién en ese mismo ciclo manda el CONTACT real en JSON
+    // (con deviceid/tag), que es el que de verdad correlacionamos. Por eso
+    // acá respondemos 200 con un CONTACT válido aunque no hayamos podido
+    // leer nada útil del XML que mandó — no hace falta, ya viene el CONTACT
+    // real a continuación.
     if (!req.is('application/json')) {
-      res.status(415).json({ status: 'error', message: 'unsupported content-type', expiration: 24 });
+      res.status(200).json({ status: 'ok', expiration: 24 });
       return;
     }
 
