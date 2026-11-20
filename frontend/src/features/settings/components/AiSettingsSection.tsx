@@ -25,7 +25,7 @@ Si el usuario lo pide explícitamente, o el problema es urgente/complejo y no se
 // un agente (ver features/ai/ en el backend y FloatingSupportWidget.tsx).
 export function AiSettingsSection() {
   const [settings, setSettings] = useState<AiSettings | null>(null);
-  const [provider, setProvider] = useState<'anthropic' | 'openai'>('anthropic');
+  const [provider, setProvider] = useState<'anthropic' | 'openai' | 'gemini'>('anthropic');
   const [model, setModel] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [enabled, setEnabled] = useState(false);
@@ -42,7 +42,9 @@ export function AiSettingsSection() {
       .getAi()
       .then((data) => {
         setSettings(data);
-        if (data.aiProvider === 'anthropic' || data.aiProvider === 'openai') setProvider(data.aiProvider);
+        if (data.aiProvider === 'anthropic' || data.aiProvider === 'openai' || data.aiProvider === 'gemini') {
+          setProvider(data.aiProvider);
+        }
         setModel(data.aiModel ?? '');
         setEnabled(data.aiEnabled);
         setSystemPrompt(data.aiSystemPrompt ?? SYSTEM_PROMPT_TEMPLATE);
@@ -110,11 +112,12 @@ export function AiSettingsSection() {
       <label className="mb-1 block text-sm font-medium text-gray-700">Proveedor</label>
       <select
         value={provider}
-        onChange={(e) => setProvider(e.target.value as 'anthropic' | 'openai')}
+        onChange={(e) => setProvider(e.target.value as 'anthropic' | 'openai' | 'gemini')}
         className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
       >
         <option value="anthropic">Anthropic (Claude)</option>
         <option value="openai">OpenAI</option>
+        <option value="gemini">Google (Gemini)</option>
       </select>
 
       <label className="mb-1 block text-sm font-medium text-gray-700">Modelo</label>
@@ -122,7 +125,7 @@ export function AiSettingsSection() {
         type="text"
         value={model}
         onChange={(e) => setModel(e.target.value)}
-        placeholder="ej: claude-sonnet-5"
+        placeholder={provider === 'gemini' ? 'ej: gemini-2.5-flash' : 'ej: claude-sonnet-5'}
         className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm focus:border-blue-500 focus:outline-none"
       />
 

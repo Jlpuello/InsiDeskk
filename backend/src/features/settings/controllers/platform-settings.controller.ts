@@ -26,7 +26,7 @@ const updateWhatsappSchema = Joi.object({
 // aiProvider y aiApiKey van siempre juntos: una key solo tiene sentido para
 // el proveedor con el que se generó.
 const updateAiSchema = Joi.object({
-  aiProvider: Joi.string().valid('anthropic', 'openai'),
+  aiProvider: Joi.string().valid('anthropic', 'openai', 'gemini'),
   aiModel: Joi.string().min(1).allow(''),
   aiApiKey: Joi.string().min(1),
   aiEnabled: Joi.boolean(),

@@ -37,6 +37,7 @@ export class AiClientService {
     try {
       if (config.provider === 'anthropic') return await this.chatAnthropic(config, systemPrompt, messages, tools);
       if (config.provider === 'openai') return await this.chatOpenai(config, systemPrompt, messages, tools);
+      if (config.provider === 'gemini') return await this.chatGemini(config, systemPrompt, messages, tools);
       throw new Error(`Proveedor de IA desconocido: ${config.provider}`);
     } catch (err) {
       const detail = axios.isAxiosError(err) ? JSON.stringify(err.response?.data) : (err as Error).message;
@@ -103,6 +104,47 @@ export class AiClientService {
       text: message.content ?? undefined,
       ...(toolCall && {
         toolCall: { name: toolCall.function.name, input: JSON.parse(toolCall.function.arguments || '{}') },
+      }),
+    };
+  }
+
+  // Formato propio de Gemini (ver ai.google.dev/api/generate-content):
+  // "contents[].role" es "user"/"model" (no "assistant"), el system prompt va
+  // aparte en "systemInstruction", y las tools van envueltas en un único
+  // elemento "functionDeclarations" (no un array de {type, function} como
+  // OpenAI). Auth por header x-goog-api-key, no Bearer.
+  private async chatGemini(
+    config: EffectiveAiConfig,
+    systemPrompt: string,
+    messages: AiChatMessage[],
+    tools: AiTool[],
+  ): Promise<AiChatResult> {
+    const { data } = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent`,
+      {
+        contents: messages.map((m) => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }],
+        })),
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        ...(tools.length > 0 && {
+          tools: [{ functionDeclarations: tools.map((t) => ({ name: t.name, description: t.description, parameters: t.parameters })) }],
+        }),
+      },
+      { headers: { 'x-goog-api-key': config.apiKey, 'Content-Type': 'application/json' } },
+    );
+
+    const parts = (data.candidates?.[0]?.content?.parts ?? []) as {
+      text?: string;
+      functionCall?: { name: string; args?: Record<string, unknown> };
+    }[];
+    const textPart = parts.find((p) => p.text !== undefined);
+    const functionCallPart = parts.find((p) => p.functionCall);
+
+    return {
+      text: textPart?.text,
+      ...(functionCallPart?.functionCall && {
+        toolCall: { name: functionCallPart.functionCall.name, input: functionCallPart.functionCall.args ?? {} },
       }),
     };
   }
